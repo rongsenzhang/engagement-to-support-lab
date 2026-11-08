@@ -1,0 +1,68 @@
+[
+  {
+    "id": "behavioural_activity",
+    "title": "Observed activity is one part of engagement",
+    "concept": "Fredricks, Blumenfeld and Paris distinguish behavioural, emotional and cognitive engagement. This prototype observes digital behaviour; it does not measure all three dimensions.",
+    "signals": ["clicks_28", "active_days_28", "clicks_7", "active_days_7"],
+    "hypothesis": "Our design hypothesis: activity volume and the number of active days may provide a useful baseline for ranking subsequent module-withdrawal risk. Compare the activity model with the simple inactivity rule.",
+    "limitations": "Clicks do not establish attention, understanding, effort or motivation. The cited review concerns school engagement and does not validate these OULAD features or establish their causal effect.",
+    "source_title": "Fredricks, Blumenfeld & Paris (2004), School Engagement: Potential of the Concept, State of the Evidence",
+    "url": "https://doi.org/10.3102/00346543074001059",
+    "status": "Research-informed hypothesis; behavioural proxy only"
+  },
+  {
+    "id": "recent_activity",
+    "title": "Recency provides an interpretable baseline",
+    "concept": "Flanagan, Majumdar and Ogata examine time-bounded digital reading behaviour before an assessment, while warning that learning outside the observed system can be missed.",
+    "signals": ["days_since_last", "no_activity", "active_days_7"],
+    "hypothesis": "Our design hypothesis: time since the last recorded activity may help prioritise a conversation. The inactivity rule supplies a transparent comparator; its score is days, not a probability.",
+    "limitations": "The study did not validate our recency rule or a seven-day threshold. A gap in VLE records can reflect offline study or another system. The no-activity flag must remain distinct from a known last-activity date.",
+    "source_title": "Flanagan, Majumdar & Ogata (2022), Early-warning prediction of student performance and engagement in open book assessment by reading behavior analysis",
+    "url": "https://link.springer.com/article/10.1186/s41239-022-00348-4",
+    "status": "Baseline design; no universal inactivity threshold claimed"
+  },
+  {
+    "id": "personal_trend",
+    "title": "Compare recent behaviour with the student's earlier pattern",
+    "concept": "Nguyen, Huptych and Rienties analyse when students engage relative to learning design, showing why temporal patterns deserve examination alongside aggregate activity.",
+    "signals": ["clicks_7", "clicks_previous_7", "log_activity_ratio", "activity_day_change"],
+    "hypothesis": "Our design hypothesis: the change from days 15-21 to days 22-28 may add predictive information beyond cumulative activity. Compare the trend model with the activity model using the same model family and evaluation population.",
+    "limitations": "This week-to-week feature is our extension, not a measure validated in the cited study. A falling pattern can be consistent with completed tasks, changing course demands or activity elsewhere; it does not diagnose disengagement.",
+    "source_title": "Nguyen, Huptych & Rienties (2018), Linking students' timing of engagement to learning design and academic performance",
+    "url": "https://oro.open.ac.uk/53939/1/p141-nguyen.pdf",
+    "status": "Ablation hypothesis; improvement must be measured"
+  },
+  {
+    "id": "assessment_context",
+    "title": "Interpret activity alongside tasks already due",
+    "concept": "Nguyen and colleagues connect behavioural timing with learning design. This motivates examining task context rather than interpreting every activity pattern in isolation.",
+    "signals": ["due_count", "overdue_count", "submitted_count", "overdue_fraction", "no_due_assessment"],
+    "hypothesis": "Our design hypothesis: assessments due by day 28 and submissions recorded by that day may add useful context. Compare the context model with the trend model at the same contact capacity.",
+    "limitations": "OULAD deadlines are course-level; individual extensions and local exceptions are unavailable. No due assessment is not a missed assessment. The cited study examined one module and excluded withdrawn students, so it does not establish withdrawal prediction.",
+    "source_title": "Nguyen, Huptych & Rienties (2018), Linking students' timing of engagement to learning design and academic performance",
+    "url": "https://oro.open.ac.uk/53939/1/p141-nguyen.pdf",
+    "status": "Research-informed hypothesis; deadline exceptions unavailable"
+  },
+  {
+    "id": "course_calendar",
+    "title": "A quieter week can have a course-level explanation",
+    "concept": "Kortext's Keele case describes a week-six activity dip during a week without normal taught sessions and a subsequent change to the teaching arrangements.",
+    "signals": ["due_count", "no_due_assessment", "weekly activity chart"],
+    "hypothesis": "Our product hypothesis: tutors should inspect available course context before interpreting an individual decline. This version includes assessment context; a future evaluation could add verified teaching dates, breaks and planned independent-study periods.",
+    "limitations": "The Keele account is a vendor-published practice report, not a controlled trial. OULAD does not provide the teaching calendar needed to test this explanation. The demo cannot identify holiday weeks or claim that Stream lacks calendar context.",
+    "source_title": "Kortext (20 November 2024), Your questions answered: Keele's engagement insights",
+    "url": "https://kortext.com/stream/blog/retention/keele-engagement-insights/",
+    "status": "Business context; teaching-calendar extension planned"
+  },
+  {
+    "id": "outcome_scope",
+    "title": "Keep the outcome separate from the engagement signals",
+    "concept": "OULAD records daily VLE interactions and withdrawal from a particular module presentation. That outcome provides an observable retrospective label, not a psychological engagement measure.",
+    "signals": ["day-28 behavioural snapshot", "later module withdrawal: evaluation only"],
+    "hypothesis": "Our evaluation question: among students still registered at day 28, do the observed signals help rank subsequent withdrawal from that module? Future withdrawal information creates the label only; it is excluded from predictors.",
+    "limitations": "The dataset covers selected 2013-2014 distance-learning modules. Module withdrawal is not necessarily leaving university. No intervention-effect data establish that contacting a flagged student would prevent withdrawal.",
+    "source_title": "Kuzilek, Hlosta & Zdrahal (2017), Open University Learning Analytics dataset",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5704676/",
+    "status": "Retrospective outcome definition; no causal effect claimed"
+  }
+]
