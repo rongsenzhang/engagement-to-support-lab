@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="An independent research prototype connecting engagement indicators, validated models and human student support.">
+  <title>Engagement-to-Support Lab</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <a class="brand" href="#queue" aria-label="Engagement-to-Support Lab home">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 36 36"><path d="M6 26V10M15 26V17M24 26V6"/><circle cx="30" cy="10" r="3"/></svg></span>
+      <span><strong>Engagement-to-Support</strong><span class="brand-sub">RESEARCH LAB / V1</span></span>
+    </a>
+    <div class="header-status"><span class="status-dot"></span>Independent application prototype</div>
+  </header>
+  <div class="page-shell">
+    <section class="hero" aria-label="About this prototype">
+      <div><p class="eyebrow">FROM LEARNING SIGNALS TO SUPPORT DECISIONS</p><h1>Evidence for earlier support.</h1><p class="hero-description">Explore how research-informed indicators become testable predictions and a practical starting point for a human conversation.</p></div>
+      <div class="snapshot-label"><span class="small-label">HISTORICAL SNAPSHOT</span><strong>Day <span id="hero-cutoff">28</span></strong><span>OULAD · 2013–2014</span><span class="snapshot-foot">Public, anonymised learning records</span></div>
+    </section>
+    <nav class="view-nav" aria-label="Lab views">
+      <a href="#queue" data-view="queue" class="active" aria-current="page"><span class="nav-number">01</span>Support queue</a>
+      <a href="#evidence" data-view="evidence"><span class="nav-number">02</span>Model evidence</a>
+      <a href="#research" data-view="research"><span class="nav-number">03</span>Research &amp; scope</a>
+    </nav>
+    <main id="main" tabindex="-1"><div class="loading-message" role="status">Loading the local research results…</div></main>
+    <footer class="site-footer"><span>Built by Rongsen Zhang · Engagement-to-Support Lab</span><span>Independent prototype · Not affiliated with Kortext</span><a id="dataset-link" href="https://archive.ics.uci.edu/dataset/349/open+university+learning+analytics+dataset" target="_blank" rel="noopener noreferrer">OULAD · CC BY 4.0 ↗</a></footer>
+  </div>
+  <div id="live-status" class="sr-only" role="status" aria-live="polite"></div>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
