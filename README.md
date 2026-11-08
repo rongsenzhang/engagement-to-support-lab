@@ -1,5 +1,9 @@
 # Engagement-to-Support Lab — first working research prototype
 
+[Live demo](https://rongsenzhang.github.io/engagement-to-support-lab/) · [Releases](https://github.com/rongsenzhang/engagement-to-support-lab/releases) · [Research roadmap](ROADMAP.md) · [Working practices and rollback](CONTRIBUTING.md) · [Change history](CHANGELOG.md)
+
+The initial experiment is preserved as **v0.1.0**. New work is tracked through issues, branches, pull requests and versioned releases. The roadmap separates public product evidence, independently chosen baselines and proposed research; it is not a claim to reproduce Kortext's proprietary system.
+
 An independent application project for Rongsen Zhang, developed with AI assistance. It explores the research-to-indicator and validation work described in the University of Stirling–Kortext KTP vacancy FAC02157. It is not a Kortext product or an integration with Stream, and does not implement the company's proprietary algorithm.
 
 ## Open the working demo
