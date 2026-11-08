@@ -1,0 +1,781 @@
+{
+  "meta": {
+    "title": "Engagement-to-Support Lab",
+    "version": "0.1.0",
+    "generated_at": "2026-11-08T11:20:02.720321+00:00",
+    "cutoff_day": 28,
+    "target": "Subsequent module withdrawal after day 28 and on/before the recorded module end, among still-registered students.",
+    "dataset": "OULAD · 2013–2014",
+    "license": "CC BY 4.0",
+    "dataset_url": "https://archive.ics.uci.edu/dataset/349/open+university+learning+analytics+dataset",
+    "split_description": "Train: 2013B+2013J. Calibration/model selection: 2014B. Locked test: 2014J. Five shared modules; no student crosses splits.",
+    "splits": {
+      "train": {
+        "n": 11427,
+        "unique_students": 11307,
+        "positives": 1953,
+        "prevalence": 0.1709110002625361,
+        "presentations": [
+          "2013B",
+          "2013J"
+        ]
+      },
+      "validation": {
+        "n": 4769,
+        "unique_students": 4768,
+        "positives": 794,
+        "prevalence": 0.1664919270287272,
+        "presentations": [
+          "2014B"
+        ]
+      },
+      "test": {
+        "n": 6362,
+        "unique_students": 6360,
+        "positives": 966,
+        "prevalence": 0.15183904432568374,
+        "presentations": [
+          "2014J"
+        ]
+      }
+    },
+    "exclusions": {
+      "source_enrollments": 32593,
+      "in_selected_modules": 27411,
+      "outside_selected_modules": 5182,
+      "missing_registration_date": 37,
+      "registered_after_snapshot": 13,
+      "withdrawn_by_snapshot": 4079,
+      "withdrawal_after_course_end": 1,
+      "eligible_before_split_dedup": 23281,
+      "cross_split_repeats_removed": {
+        "train": 0,
+        "validation": 241,
+        "test": 482
+      }
+    },
+    "limits": [
+      "Independent application prototype; not a Kortext product, integration or reproduction of its proprietary algorithm.",
+      "Historical, anonymised Open University distance-learning records from 2013–2014. No contemporary or external-institution validation.",
+      "Target is later withdrawal from a module, not university dropout, psychological disengagement or mental health.",
+      "No classroom timetable, offline study, extensions, personal circumstances or intervention outcomes are available.",
+      "No recorded activity is not proof of no learning or of a data-feed outage. Missing assessment records need human review.",
+      "Model contributions explain statistical associations with a prediction, not causes or the effect of changing behaviour.",
+      "Retrospective ranking performance does not establish that outreach prevents withdrawal or identifies who benefits most.",
+      "Later cohorts exclude previously seen eligible students. This tests new-student generalisation and changes the evaluation population.",
+      "B and J presentations may differ. Module/season breakdowns are necessary; this is not an exact calendar-time deployment replay.",
+      "No user interviews, institutional pilot, production security review or causal evaluation has been conducted."
+    ],
+    "default_model": "context",
+    "selection_rule": "Highest validation average precision among A/B/C, with lower Brier score as tie-breaker. No test-set model selection.",
+    "feature_groups": {
+      "activity": [
+        "log_clicks_28",
+        "active_days_28",
+        "days_since_last",
+        "no_activity"
+      ],
+      "trend": [
+        "log_clicks_28",
+        "active_days_28",
+        "days_since_last",
+        "no_activity",
+        "log_activity_ratio",
+        "activity_day_change"
+      ],
+      "context": [
+        "log_clicks_28",
+        "active_days_28",
+        "days_since_last",
+        "no_activity",
+        "log_activity_ratio",
+        "activity_day_change",
+        "overdue_fraction",
+        "no_due_assessment"
+      ]
+    },
+    "reproducibility": {
+      "seed": 42,
+      "python": "3.9.6",
+      "sklearn": "1.6.1",
+      "numpy": "1.26.4",
+      "pandas": "2.3.3",
+      "duckdb": "1.4.5",
+      "source_archive_sha256": "f2ed1902616c1fe8d2824d872c0b7d2d72be435bf0124d077044fe4be2c6d3e4"
+    },
+    "explanation_note": "Contributions are additive calibrated log-odds relative to training-feature means; intercept is separate."
+  },
+  "models": [
+    {
+      "id": "inactivity",
+      "label": "Inactivity rule",
+      "kind": "rule",
+      "features": [
+        "days_since_last"
+      ],
+      "metrics": {
+        "average_precision": 0.17631615002794876,
+        "roc_auc": 0.5672634203389675,
+        "brier": null,
+        "precision_at_10pct": 0.18995290423861852,
+        "recall_at_10pct": 0.12525879917184266
+      },
+      "calibration": [],
+      "capacity": [
+        {
+          "percent": 5,
+          "k": 319,
+          "tp": 61,
+          "fp": 258,
+          "precision": 0.19122257053291536,
+          "recall": 0.06314699792960662
+        },
+        {
+          "percent": 10,
+          "k": 637,
+          "tp": 121,
+          "fp": 516,
+          "precision": 0.18995290423861852,
+          "recall": 0.12525879917184266
+        },
+        {
+          "percent": 15,
+          "k": 955,
+          "tp": 175,
+          "fp": 780,
+          "precision": 0.18324607329842932,
+          "recall": 0.18115942028985507
+        },
+        {
+          "percent": 20,
+          "k": 1273,
+          "tp": 246,
+          "fp": 1027,
+          "precision": 0.19324430479183033,
+          "recall": 0.2546583850931677
+        },
+        {
+          "percent": 30,
+          "k": 1909,
+          "tp": 362,
+          "fp": 1547,
+          "precision": 0.1896280775275013,
+          "recall": 0.3747412008281574
+        },
+        {
+          "percent": 40,
+          "k": 2545,
+          "tp": 464,
+          "fp": 2081,
+          "precision": 0.18231827111984283,
+          "recall": 0.4803312629399586
+        },
+        {
+          "percent": 50,
+          "k": 3181,
+          "tp": 577,
+          "fp": 2604,
+          "precision": 0.18138950015718328,
+          "recall": 0.5973084886128365
+        }
+      ],
+      "coefficients": []
+    },
+    {
+      "id": "activity",
+      "label": "A · Activity",
+      "kind": "logistic",
+      "features": [
+        "log_clicks_28",
+        "active_days_28",
+        "days_since_last",
+        "no_activity"
+      ],
+      "metrics": {
+        "average_precision": 0.17757849794068764,
+        "roc_auc": 0.5713761976895699,
+        "brier": 0.12832833157812348,
+        "precision_at_10pct": 0.18995290423861852,
+        "recall_at_10pct": 0.12525879917184266
+      },
+      "validation_metrics": {
+        "average_precision": 0.17437836880315344,
+        "roc_auc": 0.5246982874704942,
+        "brier": 0.13861142797654308,
+        "precision_at_10pct": 0.1719077568134172,
+        "recall_at_10pct": 0.10327455919395466
+      },
+      "calibration": [
+        {
+          "mean_pred": 0.16577469786489873,
+          "observed": 0.15183904432568374,
+          "n": 6362
+        }
+      ],
+      "capacity": [
+        {
+          "percent": 5,
+          "k": 319,
+          "tp": 58,
+          "fp": 261,
+          "precision": 0.18181818181818182,
+          "recall": 0.060041407867494824
+        },
+        {
+          "percent": 10,
+          "k": 637,
+          "tp": 121,
+          "fp": 516,
+          "precision": 0.18995290423861852,
+          "recall": 0.12525879917184266
+        },
+        {
+          "percent": 15,
+          "k": 955,
+          "tp": 167,
+          "fp": 788,
+          "precision": 0.17486910994764399,
+          "recall": 0.17287784679089027
+        },
+        {
+          "percent": 20,
+          "k": 1273,
+          "tp": 225,
+          "fp": 1048,
+          "precision": 0.1767478397486253,
+          "recall": 0.2329192546583851
+        },
+        {
+          "percent": 30,
+          "k": 1909,
+          "tp": 351,
+          "fp": 1558,
+          "precision": 0.18386589837611314,
+          "recall": 0.36335403726708076
+        },
+        {
+          "percent": 40,
+          "k": 2545,
+          "tp": 476,
+          "fp": 2069,
+          "precision": 0.18703339882121808,
+          "recall": 0.4927536231884058
+        },
+        {
+          "percent": 50,
+          "k": 3181,
+          "tp": 565,
+          "fp": 2616,
+          "precision": 0.1776171015403961,
+          "recall": 0.5848861283643892
+        }
+      ],
+      "coefficients": [
+        {
+          "feature": "log_clicks_28",
+          "label": "Recorded activity volume",
+          "coefficient": 0.04369216721843241
+        },
+        {
+          "feature": "active_days_28",
+          "label": "Active days in first 28 days",
+          "coefficient": -0.107617502613358
+        },
+        {
+          "feature": "days_since_last",
+          "label": "Days since last recorded activity",
+          "coefficient": 0.02292435581640108
+        },
+        {
+          "feature": "no_activity",
+          "label": "No recorded activity",
+          "coefficient": 0.019732848755948683
+        }
+      ],
+      "intercept": -1.6243249504228827,
+      "calibration_slope": 0.44038364110587847
+    },
+    {
+      "id": "trend",
+      "label": "B · Activity + trend",
+      "kind": "logistic",
+      "features": [
+        "log_clicks_28",
+        "active_days_28",
+        "days_since_last",
+        "no_activity",
+        "log_activity_ratio",
+        "activity_day_change"
+      ],
+      "metrics": {
+        "average_precision": 0.17519173359478074,
+        "roc_auc": 0.566844718194752,
+        "brier": 0.1283721549723896,
+        "precision_at_10pct": 0.1836734693877551,
+        "recall_at_10pct": 0.12111801242236025
+      },
+      "validation_metrics": {
+        "average_precision": 0.1741193406854293,
+        "roc_auc": 0.5260613405573246,
+        "brier": 0.13860894476318864,
+        "precision_at_10pct": 0.16771488469601678,
+        "recall_at_10pct": 0.10075566750629723
+      },
+      "calibration": [
+        {
+          "mean_pred": 0.16514333236752435,
+          "observed": 0.15183904432568374,
+          "n": 6362
+        }
+      ],
+      "capacity": [
+        {
+          "percent": 5,
+          "k": 319,
+          "tp": 61,
+          "fp": 258,
+          "precision": 0.19122257053291536,
+          "recall": 0.06314699792960662
+        },
+        {
+          "percent": 10,
+          "k": 637,
+          "tp": 117,
+          "fp": 520,
+          "precision": 0.1836734693877551,
+          "recall": 0.12111801242236025
+        },
+        {
+          "percent": 15,
+          "k": 955,
+          "tp": 168,
+          "fp": 787,
+          "precision": 0.17591623036649215,
+          "recall": 0.17391304347826086
+        },
+        {
+          "percent": 20,
+          "k": 1273,
+          "tp": 227,
+          "fp": 1046,
+          "precision": 0.17831893165750196,
+          "recall": 0.2349896480331263
+        },
+        {
+          "percent": 30,
+          "k": 1909,
+          "tp": 344,
+          "fp": 1565,
+          "precision": 0.18019905709795705,
+          "recall": 0.35610766045548653
+        },
+        {
+          "percent": 40,
+          "k": 2545,
+          "tp": 464,
+          "fp": 2081,
+          "precision": 0.18231827111984283,
+          "recall": 0.4803312629399586
+        },
+        {
+          "percent": 50,
+          "k": 3181,
+          "tp": 568,
+          "fp": 2613,
+          "precision": 0.1785602011945929,
+          "recall": 0.587991718426501
+        }
+      ],
+      "coefficients": [
+        {
+          "feature": "log_clicks_28",
+          "label": "Recorded activity volume",
+          "coefficient": 0.05286951447796154
+        },
+        {
+          "feature": "active_days_28",
+          "label": "Active days in first 28 days",
+          "coefficient": -0.1068944210933746
+        },
+        {
+          "feature": "days_since_last",
+          "label": "Days since last recorded activity",
+          "coefficient": 0.034583619573911525
+        },
+        {
+          "feature": "no_activity",
+          "label": "No recorded activity",
+          "coefficient": 0.014712167780749333
+        },
+        {
+          "feature": "log_activity_ratio",
+          "label": "Recent activity versus previous week",
+          "coefficient": 0.018575558188026236
+        },
+        {
+          "feature": "activity_day_change",
+          "label": "Change in active days",
+          "coefficient": 0.0005806844259843619
+        }
+      ],
+      "intercept": -1.6297317613191875,
+      "calibration_slope": 0.4255670809421715
+    },
+    {
+      "id": "context",
+      "label": "C · Activity + trend + assessment",
+      "kind": "logistic",
+      "features": [
+        "log_clicks_28",
+        "active_days_28",
+        "days_since_last",
+        "no_activity",
+        "log_activity_ratio",
+        "activity_day_change",
+        "overdue_fraction",
+        "no_due_assessment"
+      ],
+      "metrics": {
+        "average_precision": 0.2079684607431689,
+        "roc_auc": 0.5750475392400168,
+        "brier": 0.1269015895871845,
+        "precision_at_10pct": 0.2543171114599686,
+        "recall_at_10pct": 0.16770186335403728
+      },
+      "validation_metrics": {
+        "average_precision": 0.2451826860116243,
+        "roc_auc": 0.6110066061498979,
+        "brier": 0.13469473307003998,
+        "precision_at_10pct": 0.3228511530398323,
+        "recall_at_10pct": 0.19395465994962216
+      },
+      "calibration": [
+        {
+          "mean_pred": 0.09350602355883031,
+          "observed": 0.11245674740484429,
+          "n": 578
+        },
+        {
+          "mean_pred": 0.1589289948498775,
+          "observed": 0.1432944327530132,
+          "n": 5227
+        },
+        {
+          "mean_pred": 0.20650431730215546,
+          "observed": 0.12716763005780346,
+          "n": 173
+        },
+        {
+          "mean_pred": 0.3426365460515585,
+          "observed": 0.3394255874673629,
+          "n": 383
+        },
+        {
+          "mean_pred": 0.40885133757281106,
+          "observed": 0.0,
+          "n": 1
+        }
+      ],
+      "capacity": [
+        {
+          "percent": 5,
+          "k": 319,
+          "tp": 111,
+          "fp": 208,
+          "precision": 0.34796238244514105,
+          "recall": 0.11490683229813664
+        },
+        {
+          "percent": 10,
+          "k": 637,
+          "tp": 162,
+          "fp": 475,
+          "precision": 0.2543171114599686,
+          "recall": 0.16770186335403728
+        },
+        {
+          "percent": 15,
+          "k": 955,
+          "tp": 207,
+          "fp": 748,
+          "precision": 0.21675392670157068,
+          "recall": 0.21428571428571427
+        },
+        {
+          "percent": 20,
+          "k": 1273,
+          "tp": 263,
+          "fp": 1010,
+          "precision": 0.206598586017282,
+          "recall": 0.2722567287784679
+        },
+        {
+          "percent": 30,
+          "k": 1909,
+          "tp": 362,
+          "fp": 1547,
+          "precision": 0.1896280775275013,
+          "recall": 0.3747412008281574
+        },
+        {
+          "percent": 40,
+          "k": 2545,
+          "tp": 472,
+          "fp": 2073,
+          "precision": 0.18546168958742631,
+          "recall": 0.4886128364389234
+        },
+        {
+          "percent": 50,
+          "k": 3181,
+          "tp": 575,
+          "fp": 2606,
+          "precision": 0.1807607670543854,
+          "recall": 0.5952380952380952
+        }
+      ],
+      "coefficients": [
+        {
+          "feature": "log_clicks_28",
+          "label": "Recorded activity volume",
+          "coefficient": 0.14420510905809547
+        },
+        {
+          "feature": "active_days_28",
+          "label": "Active days in first 28 days",
+          "coefficient": -0.20629837629923564
+        },
+        {
+          "feature": "days_since_last",
+          "label": "Days since last recorded activity",
+          "coefficient": -0.026141691498507712
+        },
+        {
+          "feature": "no_activity",
+          "label": "No recorded activity",
+          "coefficient": 0.0350970253285434
+        },
+        {
+          "feature": "log_activity_ratio",
+          "label": "Recent activity versus previous week",
+          "coefficient": -0.008346105035860137
+        },
+        {
+          "feature": "activity_day_change",
+          "label": "Change in active days",
+          "coefficient": 0.006372889534548137
+        },
+        {
+          "feature": "overdue_fraction",
+          "label": "Share of due assessments not recorded as submitted",
+          "coefficient": 0.2613645580322583
+        },
+        {
+          "feature": "no_due_assessment",
+          "label": "No assessment due by snapshot",
+          "coefficient": -0.22826388207428552
+        }
+      ],
+      "intercept": -1.5826241572970419,
+      "calibration_slope": 0.7700512269631477
+    }
+  ],
+  "audit": [
+    {
+      "attribute": "gender",
+      "group": "F",
+      "n": 3009,
+      "positives": 453,
+      "flagged": 309,
+      "tp": 74,
+      "fp": 235,
+      "fn": 379,
+      "recall": 0.16335540838852097,
+      "fpr": 0.09194053208137715,
+      "precision": 0.23948220064724918
+    },
+    {
+      "attribute": "gender",
+      "group": "M",
+      "n": 3353,
+      "positives": 513,
+      "flagged": 328,
+      "tp": 88,
+      "fp": 240,
+      "fn": 425,
+      "recall": 0.17153996101364521,
+      "fpr": 0.08450704225352113,
+      "precision": 0.2682926829268293
+    },
+    {
+      "attribute": "age_band",
+      "group": "0-35",
+      "n": 4458,
+      "positives": 686,
+      "flagged": 441,
+      "tp": 113,
+      "fp": 328,
+      "fn": 573,
+      "recall": 0.16472303206997085,
+      "fpr": 0.08695652173913043,
+      "precision": 0.2562358276643991
+    },
+    {
+      "attribute": "age_band",
+      "group": "35-55",
+      "n": 1870,
+      "positives": 275,
+      "flagged": 194,
+      "tp": 48,
+      "fp": 146,
+      "fn": 227,
+      "recall": 0.17454545454545456,
+      "fpr": 0.09153605015673981,
+      "precision": 0.24742268041237114
+    },
+    {
+      "attribute": "disability",
+      "group": "N",
+      "n": 5762,
+      "positives": 822,
+      "flagged": 575,
+      "tp": 138,
+      "fp": 437,
+      "fn": 684,
+      "recall": 0.1678832116788321,
+      "fpr": 0.08846153846153847,
+      "precision": 0.24
+    },
+    {
+      "attribute": "disability",
+      "group": "Y",
+      "n": 600,
+      "positives": 144,
+      "flagged": 62,
+      "tp": 24,
+      "fp": 38,
+      "fn": 120,
+      "recall": 0.16666666666666666,
+      "fpr": 0.08333333333333333,
+      "precision": 0.3870967741935484
+    }
+  ],
+  "research": [
+    {
+      "id": "behavioural_activity",
+      "title": "Observed activity is one part of engagement",
+      "concept": "Fredricks, Blumenfeld and Paris distinguish behavioural, emotional and cognitive engagement. This prototype observes digital behaviour; it does not measure all three dimensions.",
+      "signals": [
+        "clicks_28",
+        "active_days_28",
+        "clicks_7",
+        "active_days_7"
+      ],
+      "hypothesis": "Our design hypothesis: activity volume and the number of active days may provide a useful baseline for ranking subsequent module-withdrawal risk. Compare the activity model with the simple inactivity rule.",
+      "limitations": "Clicks do not establish attention, understanding, effort or motivation. The cited review concerns school engagement and does not validate these OULAD features or establish their causal effect.",
+      "source_title": "Fredricks, Blumenfeld & Paris (2004), School Engagement: Potential of the Concept, State of the Evidence",
+      "url": "https://doi.org/10.3102/00346543074001059",
+      "status": "Research-informed hypothesis; behavioural proxy only"
+    },
+    {
+      "id": "recent_activity",
+      "title": "Recency provides an interpretable baseline",
+      "concept": "Flanagan, Majumdar and Ogata examine time-bounded digital reading behaviour before an assessment, while warning that learning outside the observed system can be missed.",
+      "signals": [
+        "days_since_last",
+        "no_activity",
+        "active_days_7"
+      ],
+      "hypothesis": "Our design hypothesis: time since the last recorded activity may help prioritise a conversation. The inactivity rule supplies a transparent comparator; its score is days, not a probability.",
+      "limitations": "The study did not validate our recency rule or a seven-day threshold. A gap in VLE records can reflect offline study or another system. The no-activity flag must remain distinct from a known last-activity date.",
+      "source_title": "Flanagan, Majumdar & Ogata (2022), Early-warning prediction of student performance and engagement in open book assessment by reading behavior analysis",
+      "url": "https://link.springer.com/article/10.1186/s41239-022-00348-4",
+      "status": "Baseline design; no universal inactivity threshold claimed"
+    },
+    {
+      "id": "personal_trend",
+      "title": "Compare recent behaviour with the student's earlier pattern",
+      "concept": "Nguyen, Huptych and Rienties analyse when students engage relative to learning design, showing why temporal patterns deserve examination alongside aggregate activity.",
+      "signals": [
+        "clicks_7",
+        "clicks_previous_7",
+        "log_activity_ratio",
+        "activity_day_change"
+      ],
+      "hypothesis": "Our design hypothesis: the change from days 15-21 to days 22-28 may add predictive information beyond cumulative activity. Compare the trend model with the activity model using the same model family and evaluation population.",
+      "limitations": "This week-to-week feature is our extension, not a measure validated in the cited study. A falling pattern can be consistent with completed tasks, changing course demands or activity elsewhere; it does not diagnose disengagement.",
+      "source_title": "Nguyen, Huptych & Rienties (2018), Linking students' timing of engagement to learning design and academic performance",
+      "url": "https://oro.open.ac.uk/53939/1/p141-nguyen.pdf",
+      "status": "Ablation hypothesis; improvement must be measured"
+    },
+    {
+      "id": "assessment_context",
+      "title": "Interpret activity alongside tasks already due",
+      "concept": "Nguyen and colleagues connect behavioural timing with learning design. This motivates examining task context rather than interpreting every activity pattern in isolation.",
+      "signals": [
+        "due_count",
+        "overdue_count",
+        "submitted_count",
+        "overdue_fraction",
+        "no_due_assessment"
+      ],
+      "hypothesis": "Our design hypothesis: assessments due by day 28 and submissions recorded by that day may add useful context. Compare the context model with the trend model at the same contact capacity.",
+      "limitations": "OULAD deadlines are course-level; individual extensions and local exceptions are unavailable. No due assessment is not a missed assessment. The cited study examined one module and excluded withdrawn students, so it does not establish withdrawal prediction.",
+      "source_title": "Nguyen, Huptych & Rienties (2018), Linking students' timing of engagement to learning design and academic performance",
+      "url": "https://oro.open.ac.uk/53939/1/p141-nguyen.pdf",
+      "status": "Research-informed hypothesis; deadline exceptions unavailable"
+    },
+    {
+      "id": "course_calendar",
+      "title": "A quieter week can have a course-level explanation",
+      "concept": "Kortext's Keele case describes a week-six activity dip during a week without normal taught sessions and a subsequent change to the teaching arrangements.",
+      "signals": [
+        "due_count",
+        "no_due_assessment",
+        "weekly activity chart"
+      ],
+      "hypothesis": "Our product hypothesis: tutors should inspect available course context before interpreting an individual decline. This version includes assessment context; a future evaluation could add verified teaching dates, breaks and planned independent-study periods.",
+      "limitations": "The Keele account is a vendor-published practice report, not a controlled trial. OULAD does not provide the teaching calendar needed to test this explanation. The demo cannot identify holiday weeks or claim that Stream lacks calendar context.",
+      "source_title": "Kortext (20 November 2024), Your questions answered: Keele's engagement insights",
+      "url": "https://kortext.com/stream/blog/retention/keele-engagement-insights/",
+      "status": "Business context; teaching-calendar extension planned"
+    },
+    {
+      "id": "outcome_scope",
+      "title": "Keep the outcome separate from the engagement signals",
+      "concept": "OULAD records daily VLE interactions and withdrawal from a particular module presentation. That outcome provides an observable retrospective label, not a psychological engagement measure.",
+      "signals": [
+        "day-28 behavioural snapshot",
+        "later module withdrawal: evaluation only"
+      ],
+      "hypothesis": "Our evaluation question: among students still registered at day 28, do the observed signals help rank subsequent withdrawal from that module? Future withdrawal information creates the label only; it is excluded from predictors.",
+      "limitations": "The dataset covers selected 2013-2014 distance-learning modules. Module withdrawal is not necessarily leaving university. No intervention-effect data establish that contacting a flagged student would prevent withdrawal.",
+      "source_title": "Kuzilek, Hlosta & Zdrahal (2017), Open University Learning Analytics dataset",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5704676/",
+      "status": "Retrospective outcome definition; no causal effect claimed"
+    }
+  ],
+  "checks": {
+    "finite_features": true,
+    "active_at_snapshot": true,
+    "student_overlap_train_validation": 0,
+    "student_overlap_train_test": 0,
+    "student_overlap_validation_test": 0,
+    "sensitive_predictors": [],
+    "label_or_future_predictors": [],
+    "score_columns_loaded": false,
+    "cutoff_day": 28,
+    "test_alias_unique": true
+  },
+  "uncertainty": {
+    "comparison": "C minus A: average precision",
+    "resampling_unit": "student",
+    "repetitions": 200,
+    "estimate": 0.03038996280248127,
+    "ci95_percentile": [
+      0.014386112766826215,
+      0.050452848388453354
+    ],
+    "note": "Within this held-out cohort only; does not quantify uncertainty across institutions."
+  }
+}
