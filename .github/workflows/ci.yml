@@ -1,0 +1,57 @@
+name: Verify research prototype
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Prototype checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install pinned scientific dependencies
+        run: python -m pip install -r requirements.txt
+
+      # Tests create their own boundary-case fixtures and verify the committed
+      # demonstration artifacts. They do not need the untracked raw dataset.
+      - name: Run data-boundary and artifact-contract tests
+        run: python -m pytest -q tests
+
+      - name: Check Python syntax
+        run: python -m compileall -q src tests download_data.py run_demo.py package_demo.py
+
+      - name: Set up Node for JavaScript syntax checks
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Check browser JavaScript syntax
+        run: |
+          node --check web/app.js
+          node --check web/data.js
+
+      - name: Verify standalone demo packaging
+        run: python package_demo.py
