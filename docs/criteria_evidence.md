@@ -18,11 +18,23 @@ University of Stirling / Kortext KTP application. Criterion wording below is tak
 
 | Supplied criterion | Appropriate evidence | What remains outside this prototype |
 |---|---|---|
-| A PhD in a highly quantitative discipline (mathematics, statistics, computer science, data science) | Actual PhD title, certificate and CV; explain the quantitative research in Computational Finance, algorithmic game theory/mechanism design and the verified publications | The demo cannot replace credential evidence or determine the employer's subject-equivalence judgement |
+| A PhD in a highly quantitative discipline (mathematics, statistics, computer science, data science) | Actual PhD title, certificate and CV; explain the quantitative methods in the applicant's Computational Finance research and any verified publications | The demo cannot replace credential evidence or determine the employer's subject-equivalence judgement |
 | Experience of using a wide range of research methodologies (including qualitative approaches) in developing research projects | The prototype can demonstrate literature-informed hypotheses, secondary-data analysis, predictive modelling, comparison and error analysis; cite any genuinely completed qualitative research separately | The interview and usability materials in `research_notes.md` are planned research only. Teaching reflection or a proposed interview guide is not proof of completed qualitative or mixed-method research |
 | Experience of project management | A concise project brief, milestones, decisions, dependency and risk records; supplement with a verified example from the Iceni AKT or another actual project | Completion of a small prototype provides limited evidence of managing external stakeholders, budgets or a long-running project |
 
 ## Minimum reviewable evidence package
+
+The v0.2 implementation makes several claims more concrete:
+
+| Criterion | Inspectable v0.2 evidence | What the applicant should explain personally |
+|---|---|---|
+| Algorithms and tools | `src/reference.py`, fixed formula, input validation, preserved logistic models and executable tests | Why a reference index is useful, why its weights are assumptions, and why it is not a probability |
+| Analysis and recommendations | `docs/results_v0.2.md`, metric trade-offs, fixed workload and explicit next research decision | Why higher ROC-AUC and higher top-list precision can favour different methods; why neither proves retention benefit |
+| Technical/non-technical explanation | Four case comparisons and per-record R reconstruction | Explain one missed withdrawal and one non-withdrawal selection without attributing unobserved motives |
+| Continuous learning | Official-source diagnosis replacing earlier incomplete job evidence; recognition that commercial products already offer context and interventions | Which new evidence changed the proposed contribution and why |
+| Self-management/project management | A protocol commit before evaluation, separate experiment artifacts, tests and a feature branch preserving the released baseline | Distinguish local preparation, actual GitHub publication and future studies; describe AI assistance accurately |
+
+These artifacts support the application, but are not evidence of completed stakeholder interviews, external product validation or independent unaided implementation. Pair them with genuine teaching and commercial knowledge-transfer examples.
 
 1. **Working application and reproducible code.** The support queue, feature comparisons and research cards connect a business question to inspectable technical work.
 2. **Short technical/business report.** Explain the target, cutoff, split, actual results, model choice, misleading cases and next validation step. Include source attribution and the public-data limitations.

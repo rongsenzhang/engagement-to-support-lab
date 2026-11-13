@@ -2,11 +2,21 @@
 
 Versions identify this independent research prototype, not Kortext Stream releases.
 
-## Unreleased
+## Unreleased — v0.2 research preview, 2026-11-13
+
+- Add a primary-source company and competitor diagnosis, with a capability matrix separating known facts, our implementation and unknown proprietary details.
+- Commit the R1 protocol before evaluation; add a deterministic, equally weighted reference index and separate reproducible artifacts. Preserve ten original experiment files with SHA-256 checks.
+- Reorganise the homepage around the question, A/C/R comparison and four prespecified examples, including failures. Keep the original queue, models and evidence views.
+- Expose reference arithmetic and applicability, use index units rather than probability, and export explicit CSV score units. Invalid reference overlays fall back to original results.
+- Compare the same 637-record workload: R includes 157 later withdrawals, C 162 and A 121. R has higher ROC-AUC than C; no universal winner or causal benefit is claimed.
+- Extend CI to rebuild the overlay, verify provenance and run simulated-DOM interaction checks; include R data in offline packaging.
+- Code and checks are prepared locally. Remote push, PR, GitHub Actions and Pages deployment are pending writable GitHub access; this is not a published release entry.
+
+## Maintenance — 2026-11-08
 
 - Establish a source-linked research roadmap, GitHub contribution/rollback guidance, and reusable automated verification before Pages deployment.
 - Preserve the first experiment; no model, metric, data population or interface changes are part of this maintenance update.
-- Next research milestone: document the public-reference baseline and product diagnosis before testing cross-course contextual value.
+- Established the sequence of product diagnosis, reference comparison, cross-course validation and actual tutor research.
 
 ## v0.1.0 — 2026-11-08
 

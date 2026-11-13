@@ -1,6 +1,6 @@
 # Roadmap: from public-reference baseline to a research-led demonstrator
 
-Status: proposed next-version plan, 8 November 2026. The existing released application is our independent v0.1 prototype. It is not a reproduction of Kortext's proprietary algorithm and has not been validated against Kortext.
+Status: v0.2 implementation prepared on 13 November 2026; later research remains planned. The published baseline is our independent v0.1 prototype until the v0.2 branch is pushed, reviewed and deployed. This project is not a reproduction of Kortext's proprietary algorithm and has not been validated against Kortext.
 
 ## What the recruitment brief actually asks
 
@@ -25,6 +25,8 @@ Kortext already describes alerts, assessment-related information, interventions,
 ## Milestones and acceptance criteria
 
 ### v0.2 — documented baseline and diagnosis
+
+Implementation evidence: [product comparison](docs/product_comparison.md), [company research](docs/company_research_v0.2.md), [committed protocol](docs/protocol_v0.2.md), [reference engine](src/reference.py), [results](docs/results_v0.2.md), and [verification/status](docs/verification_v0.2.md). The new overview and R1 calculation are implemented. GitHub publication is a separate pending step; later milestones below remain uncompleted.
 
 Purpose: make clear what the existing commercial product does, what our reference implements, and why further research is justified.
 
@@ -115,5 +117,7 @@ GitHub Actions records implementation and deployment checks. It does not by itse
 - End-to-end interventions, 28 April 2026: https://kortext.com/stream/blog/end-to-end-interventions-streams-real-superpower/
 - Stream 5.1, 19 August 2026: https://kortext.com/stream/blog/kortext-stream-5-1-helping-student-support-teams-act-faster-and-work-smarter/
 - Recruitment page supplied by the applicant: https://emea3.recruitmentplatform.com/tlk/pages/fo/advert/details.jsp?nPostingTargetId=4536&id=QUUFK026203F3VBQB7V79V7NE&LG=UK&languageSelect=UK
+- Full official KTP vacancy: https://iuk-ktp.org.uk/job/ktp-associate-data-scientist-engagement-analytics/
+- Institutional inquiry direction, 15 September 2026: https://kortext.com/stream/blog/turning-engagement-insight-into-institutional-action/
 
-Product sources were checked on 8 November 2026. Direct retrieval of the recruitment page was unavailable during the latest review; the distinction between diagnostic analysis of Stream 1.0 and design of Stream 2.0 is also present in the publicly indexed recruitment text. The company's advertised benefits are not independent causal evidence and are not a benchmark for this prototype.
+Product sources were refreshed on 13 November 2026 and the full official KTP vacancy was retrieved. The source register and exact boundaries are in `docs/company_research_v0.2.md`. The company's advertised benefits are not independent causal evidence and are not a benchmark for this prototype.
