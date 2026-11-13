@@ -12,13 +12,15 @@ def main():
     html = (ROOT / 'web/index.html').read_text(encoding='utf-8')
     html = html.replace('<link rel="stylesheet" href="styles.css">',
                         '<style>' + (ROOT / 'web/styles.css').read_text(encoding='utf-8') + '</style>')
-    for name in ('data.js', 'app.js'):
+    for name in ('data.js', 'reference-data.js', 'app.js'):
         code = (ROOT / 'web' / name).read_text(encoding='utf-8')
         code = code.replace('</script', '<\\/script')
         html = html.replace('<script src="' + name + '"></script>', '<script>' + code + '</script>')
-    app = dist / 'Engagement_Lab_v1.html'
+    if '<script src=' in html or '<link rel="stylesheet"' in html:
+        raise ValueError('Standalone package still references an external application asset')
+    app = dist / 'Engagement_Lab_v0.2.html'
     app.write_text(html, encoding='utf-8')
-    source = dist / 'Engagement_Lab_v1_Source.zip'
+    source = dist / 'Engagement_Lab_v0.2_Source.zip'
     excluded = {'.venv', 'data', 'dist', '__pycache__', '.pytest_cache', '.git'}
     with ZipFile(source, 'w', ZIP_DEFLATED, compresslevel=8) as archive:
         for path in sorted(ROOT.rglob('*')):
