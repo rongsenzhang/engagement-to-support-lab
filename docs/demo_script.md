@@ -1,5 +1,12 @@
 # Three-minute recruiting demonstration
 
+This preserves the **v0.1 demonstration narrative**. In v0.2 the app opens with
+Research question: begin there, inspect the A/C/R comparison and one failure
+case, then use the queue and evidence views below. Add the R metric trade-off and
+observed-test limitation from [results_v0.2.md](results_v0.2.md). The next research
+priority is within-/across-course validation before a portability claim; tutor
+feedback remains planned.
+
 Spoken script: approximately three minutes, allowing short pauses for navigation. Figures are from `artifacts/metrics.json`, generated on 8 November 2026. Recheck this script if the pipeline is rerun.
 
 Before presenting: open the application; select **All held-out modules**, **C · Activity + trend + assessment**, and **10%** review capacity. Keep historical outcomes hidden initially. This document is a script; no recording is claimed.

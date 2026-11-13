@@ -40,3 +40,24 @@ Fifteen automated tests passed. They independently exercise future-event and fut
 The initial NumPy 2.0.2 environment emitted BLAS/matrix-operation runtime warnings despite finite inputs and outputs. Finite-value checks and the probability/explanation reconstruction were investigated; the dependencies were then pinned to **NumPy 1.26.4**, and the same experiment was rerun cleanly. The model specification, feature definitions, split, selection rule and workload thresholds were not changed in response to test performance. This was a numerical-environment correction, not model tuning.
 
 The current results remain modest. Assessment context improved the held-out ranking relative to the activity-only comparator, while trend features alone did not. No production deployment, user interviews, prospective intervention study, comparison against Kortext's algorithm or claim of prevented withdrawals has been made.
+
+## v0.2 decisions — 13 November 2026
+
+The preceding sections preserve the v0.1 record. New work is on
+`research/v0.2-reference-diagnosis`, based on existing `main`; it does not replace
+that experiment.
+
+| Decision | Implemented choice | Evidence and consequence |
+|---|---|---|
+| Verify the business brief | Read the official KTP vacancy and current company/competitor primary sources | Distinguish diagnosing Stream 1.0 from designing Stream 2.0; acknowledge existing context and intervention capabilities |
+| Freeze the next comparison | Commit R1 protocol separately before evaluating it | Commit `95f95902be9c3905b5c04bf26d8481ec219d9cf9`; old outcomes remain observed, so the comparison is exploratory |
+| Make a reference inspectable | Fixed equal-weight activity/assessment index with explicit applicability | No fitting, probability interpretation or claimed proprietary reconstruction; do not tune weights after seeing results |
+| Preserve existing evidence | Add separate overlay and manifest; verify ten frozen files | No silent changes to v0.1 predictions or default model |
+| Show failures as well as gains | Four predefined case sets, first alias chosen deterministically | No hand-picked success-only walkthrough; no-assessment case comes from the entire cohort |
+| Keep metric trade-offs visible | Retain C as the original default and R as a comparator | C has higher AP/top-10% precision; R has higher AUC; no universal winner or significance claim |
+| Verify what the environment supports | Python and simulated-DOM tests, regeneration, syntax and packaging | Browser launch is unavailable; visual/mobile validation and remote CI are explicitly pending |
+| Preserve publication truth | Prepare local commits and a PR description while write access is unavailable | GitHub connector returned 403; no new remote branch, release or deployment is claimed |
+
+See [results](results_v0.2.md), [product diagnosis](product_comparison.md) and
+[verification](verification_v0.2.md). Further course-effect research and actual
+tutor feedback remain future work.

@@ -11,6 +11,13 @@ GitHub is the canonical home for this project's code, public evidence, decisions
 5. Let the **Verify research prototype** checks pass. Review both positive and negative findings. Merge through GitHub when the requested work is complete.
 6. `main` is the public-demo branch. The Pages workflow verifies the code and artifacts before deployment. Create a new release tag after checking a meaningful milestone and update `CHANGELOG.md`.
 
+For v0.2, choose **Create a merge commit** when merging its PR. Do not squash or
+rebase this branch: the manifest records the separately committed protocol, and
+regeneration resolves that commit from Git history. Rewriting its identity would
+change provenance and cause the post-merge artifact check to fail. Keep the
+protocol commit and subsequent implementation commits intact. This constraint is
+documented here; repository merge settings do not currently enforce it.
+
 This is the team's operating convention. Branch protection is not currently configured; a pull request requirement is not technically enforced. Reusable CI and deployment checks are versioned in `.github/workflows/`.
 
 ## Pull request description

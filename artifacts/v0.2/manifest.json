@@ -1,0 +1,38 @@
+{
+  "version": "0.2.0",
+  "score_spec": "R1",
+  "baseline_commit": "8324bae98803512329ecb407a07ad124108671d8",
+  "protocol_commit": "95f95902be9c3905b5c04bf26d8481ec219d9cf9",
+  "evaluation_status": "exploratory",
+  "frozen_v0.1_sha256": {
+    "artifacts/demo_data.json": "01bc4e705340f7264f72b030eb7116414b1c822e070ef28e577f4192214f5918",
+    "artifacts/metrics.json": "14042f81a9a5de14902234817ef4a72512078648c6f557c7911e486639dca684",
+    "artifacts/models.joblib": "456d5901ce8a4ed41e4f439924fe6a46b53d119f1a27bf0485b0cc2190a62a8c",
+    "artifacts/test_features.csv": "076bbdf87ffe0aa7275e47cda6e1a812da9ef09e5e1dddd24f782d7bc4cbeca2",
+    "artifacts/test_predictions.csv": "38b001d18a17af329a518f245268cc1e01c0fdf6cd2a8923a16ea28d4c8acd90",
+    "artifacts/train_features.csv": "b6f2ad03a77711a03de2664935fb214a979a52d686e4538391e5036302c79719",
+    "artifacts/validation_features.csv": "ae12a58ec2e58fd3b805d8ac3c2ecdd068f15f465cce7772397ff04d8a0fd95c",
+    "web/data.js": "c5bd8c875b5b57f62976774792f0b8ad74a9c740e9b73761c96e987de96c3bbe",
+    "src/pipeline.py": "6da2933297ad5aa0096cc02259c11e5726377f9acb6139883dd369d760a80c36",
+    "docs/protocol.md": "5a471cdd5d5f8d31d1e6bce8c31f0cc33ef5389b39042e14063680e9614c7158"
+  },
+  "command": "python build_reference.py",
+  "randomness": "None; no model fitting or resampling.",
+  "csv_nulls": "An empty assessment cell in reference_scores.csv means not applicable (no assessment due), matching JSON null; it is not a zero or an unknown input.",
+  "inputs_sha256": {
+    "docs/protocol_v0.2.md": "b01ae7a825f65865425a1c73df2a214436f055e8dfbd16daee65fc744c9db475",
+    "artifacts/demo_data.json": "01bc4e705340f7264f72b030eb7116414b1c822e070ef28e577f4192214f5918",
+    "artifacts/test_features.csv": "076bbdf87ffe0aa7275e47cda6e1a812da9ef09e5e1dddd24f782d7bc4cbeca2",
+    "src/reference.py": "4a75afadbb0791659523ec6b428f5c1015d847a460d79366daa8875b1026220c",
+    "src/pipeline.py": "6da2933297ad5aa0096cc02259c11e5726377f9acb6139883dd369d760a80c36",
+    "build_reference.py": "9793e93826397dddae6c511317bc1daa9137ce2723011f8176dac1f8738088ce",
+    "requirements.txt": "01c1d3f8ce142c5d06c230de1d5040d1b5f4ae436a9d531a007764f38cad803e"
+  },
+  "outputs_sha256": {
+    "artifacts/v0.2/reference_results.json": "e1c9fb5cf36359cda5ebcf7750cf40bccddb32c3daf08e4a5dee7018ef5737af",
+    "artifacts/v0.2/reference_scores.csv": "493376586c3ecd8f85314bcaf1a1efed42ee55ad2c2186b5eafc29003d7e0d75",
+    "web/reference-data.js": "bfcb8a1cce1335e043dcea6b21be977e3146981fe0a6e2031b724410cba60db9"
+  },
+  "population_n": 6362,
+  "note": "The protocol commit and input/code hashes identify this experiment without a self-referential output commit hash. The containing Git commit versions this manifest."
+}
