@@ -10,7 +10,7 @@ Versions identify this independent research prototype, not Kortext Stream releas
 - Expose reference arithmetic and applicability, use index units rather than probability, and export explicit CSV score units. Invalid reference overlays fall back to original results.
 - Compare the same 637-record workload: R includes 157 later withdrawals, C 162 and A 121. R has higher ROC-AUC than C; no universal winner or causal benefit is claimed.
 - Extend CI to rebuild the overlay, verify provenance and run simulated-DOM interaction checks; include R data in offline packaging.
-- Code and checks are prepared locally. Remote push, PR, GitHub Actions and Pages deployment are pending writable GitHub access; this is not a published release entry.
+- Complete an independent arithmetic/code review and real-browser desktop/mobile-width smoke checks, with screenshots and a downloaded-CSV outcome-visibility check. Publication state is recorded by the feature PR, Actions and release history; this remains an unreleased entry until merged and deployed.
 
 ## Maintenance — 2026-11-08
 

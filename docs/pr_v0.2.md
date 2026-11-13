@@ -1,8 +1,7 @@
 # Prepared PR: Add a transparent reference comparison and sourced product diagnosis
 
-Status: prepared locally; not yet opened on GitHub. Base `main`, head
-`research/v0.2-reference-diagnosis`. Use the description below when write access is
-available; update the publication status after remote checks actually run.
+Base `main`, head `research/v0.2-reference-diagnosis`. This file supplies the PR
+description; the GitHub PR and its checks are the publication-status record.
 
 Merge method: **Create a merge commit**. Do not squash or rebase this branch;
 the generated manifest depends on preserving the protocol commit's identity.
@@ -41,6 +40,8 @@ proprietary model. Counts do not demonstrate saved students or intervention
 benefit. Within-/across-course validation remains v0.3 work and actual tutor
 research remains prospective.
 
-Real-browser visual/mobile validation was unavailable in the local sandbox.
-Complete that review and inspect actual GitHub CI before merging. This prepared
-description does not claim a remote CI run or deployment has occurred.
+Real-browser review passed at desktop and mobile viewport widths, including
+routes, case selection, R arithmetic, model/module filtering, outcome visibility
+and a 97-row CSV download without hidden outcomes. Screenshots and scope are in
+`docs/verification_v0.2.md`. This was not physical-device or screen-reader testing.
+Inspect actual GitHub CI before merging; local checks do not establish deployment.

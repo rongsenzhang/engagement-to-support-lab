@@ -11,7 +11,7 @@ An independent application project for Rongsen Zhang, developed with AI assistan
 **Website:** https://rongsenzhang.github.io/engagement-to-support-lab/  
 **Source repository:** https://github.com/rongsenzhang/engagement-to-support-lab
 
-The existing published v0.1 baseline was checked in desktop and mobile browsers. v0.2 includes responsive layouts, but real-browser/mobile verification is pending; see `docs/verification_v0.2.md`. Initial loading downloads the historical demonstration results; no login or API key is needed. Deployment instructions are in `docs/deployment.md`.
+The v0.2 preview was checked in a real browser at desktop (1280 × 720) and mobile (390 × 844) viewport sizes on 13 November 2026; see [verification and screenshots](docs/verification_v0.2.md). This is responsive browser testing, not a physical-phone or screen-reader audit. Initial loading downloads the historical demonstration results; no login or API key is needed. Deployment instructions are in `docs/deployment.md`.
 
 Open `web/index.html` directly in a modern browser. No installation, internet connection or API key is needed to explore the included real, precomputed results. Alternatively, run `python3 run_demo.py` and visit the printed local address. `python package_demo.py` creates the self-contained `dist/Engagement_Lab_v0.2.html` and source ZIP.
 
