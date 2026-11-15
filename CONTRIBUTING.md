@@ -42,10 +42,20 @@ python -m pip install -r requirements.txt
 python -m pytest -q
 node --check web/app.js
 node --check web/data.js
+node --check web/reference-data.js
+node --check web/updates.js
+node --test tests/test_*.cjs
+python build_site.py
+python preserve_assets.py
 python package_demo.py
 ```
 
 The existing tests use synthetic boundary fixtures and the committed public artifacts, so they do not require the raw OULAD download or retraining. This verifies software/data consistency; it does not rerun the original experiment or establish predictive effectiveness. To reproduce that experiment, follow the full instructions in `README.md`.
+
+Preview and publish `dist/site/` for the versioned build. Pages now requires live
+HTML, revision and all resource hashes to match after deployment; inspect its
+`pages-publication-check` artifact if it fails. See [deployment details](docs/deployment.md)
+and the [Chinese publishing guide](docs/publishing_guide_zh.md).
 
 ## Revert an update
 

@@ -2,7 +2,15 @@
 
 Versions identify this independent research prototype, not Kortext Stream releases.
 
-## Unreleased — v0.2 research preview, 2026-11-13
+## Unreleased — deployment maintenance, 2026-11-15
+
+- Build content-versioned script/style URLs and a revision/checksum manifest without changing research artifacts.
+- Retain historical content-addressed resources and exact pre-maintenance legacy URLs so cached HTML can still load after a deployment.
+- Offer an explicit refresh when a different build appears, including rollback; allow dismissal and keep offline packages offline.
+- Check the canonical public HTML, revision, asset references and checksums after Pages deployment, retaining diagnostic reports.
+- Add stale-deployment and browser-update tests and a Chinese publishing guide. Preserve baseline `c648e192fa9dd629cb70ff4fb61c11296e506ca1` and use a rollback PR for recovery.
+
+## v0.2 research preview — merged and deployed, 2026-11-13 (not tagged)
 
 - Add a primary-source company and competitor diagnosis, with a capability matrix separating known facts, our implementation and unknown proprietary details.
 - Commit the R1 protocol before evaluation; add a deterministic, equally weighted reference index and separate reproducible artifacts. Preserve ten original experiment files with SHA-256 checks.
@@ -10,7 +18,7 @@ Versions identify this independent research prototype, not Kortext Stream releas
 - Expose reference arithmetic and applicability, use index units rather than probability, and export explicit CSV score units. Invalid reference overlays fall back to original results.
 - Compare the same 637-record workload: R includes 157 later withdrawals, C 162 and A 121. R has higher ROC-AUC than C; no universal winner or causal benefit is claimed.
 - Extend CI to rebuild the overlay, verify provenance and run simulated-DOM interaction checks; include R data in offline packaging.
-- Complete an independent arithmetic/code review and real-browser desktop/mobile-width smoke checks, with screenshots and a downloaded-CSV outcome-visibility check. Publication state is recorded by the feature PR, Actions and release history; this remains an unreleased entry until merged and deployed.
+- Complete an independent arithmetic/code review and real-browser desktop/mobile-width smoke checks, with screenshots and a downloaded-CSV outcome-visibility check. PR #3 was merged at `c648e192fa9dd629cb70ff4fb61c11296e506ca1`; Pages run `43432542957` succeeded. No v0.2 release tag was created.
 
 ## Maintenance — 2026-11-08
 

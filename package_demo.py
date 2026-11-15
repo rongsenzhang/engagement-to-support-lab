@@ -12,7 +12,7 @@ def main():
     html = (ROOT / 'web/index.html').read_text(encoding='utf-8')
     html = html.replace('<link rel="stylesheet" href="styles.css">',
                         '<style>' + (ROOT / 'web/styles.css').read_text(encoding='utf-8') + '</style>')
-    for name in ('data.js', 'reference-data.js', 'app.js'):
+    for name in ('data.js', 'reference-data.js', 'app.js', 'updates.js'):
         code = (ROOT / 'web' / name).read_text(encoding='utf-8')
         code = code.replace('</script', '<\\/script')
         html = html.replace('<script src="' + name + '"></script>', '<script>' + code + '</script>')

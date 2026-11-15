@@ -47,7 +47,7 @@ jobs:
           git diff --exit-code -- artifacts web/data.js web/reference-data.js
 
       - name: Check Python syntax
-        run: python -m compileall -q src tests download_data.py run_demo.py package_demo.py build_reference.py
+        run: python -m compileall -q src tests download_data.py run_demo.py package_demo.py build_reference.py build_site.py preserve_assets.py check_deployment.py
 
       - name: Set up Node for JavaScript syntax checks
         uses: actions/setup-node@v6
@@ -60,9 +60,30 @@ jobs:
           node --check web/app.js
           node --check web/data.js
           node --check web/reference-data.js
+          node --check web/updates.js
 
       - name: Check rendering and interactions in a simulated DOM
-        run: node --test tests/test_web.cjs
+        run: node --test tests/test_*.cjs
+
+      - name: Build content-versioned Pages site
+        run: |
+          python build_site.py --revision "$GITHUB_SHA"
+          python preserve_assets.py
+
+      - name: Check the built site over HTTP
+        run: |
+          python -m http.server 8765 --bind 127.0.0.1 --directory dist/site &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          python check_deployment.py --url http://127.0.0.1:8765/ --timeout 10 --interval 1
 
       - name: Verify standalone demo packaging
         run: python package_demo.py
+
+      - name: Retain local deployment check
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-verification
+          path: dist/deployment-check.json
+          if-no-files-found: ignore

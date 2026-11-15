@@ -13,7 +13,7 @@ An independent application project for Rongsen Zhang, developed with AI assistan
 
 The v0.2 preview was checked in a real browser at desktop (1280 × 720) and mobile (390 × 844) viewport sizes on 13 November 2026; see [verification and screenshots](docs/verification_v0.2.md). This is responsive browser testing, not a physical-phone or screen-reader audit. Initial loading downloads the historical demonstration results; no login or API key is needed. Deployment instructions are in `docs/deployment.md`.
 
-Open `web/index.html` directly in a modern browser. No installation, internet connection or API key is needed to explore the included real, precomputed results. Alternatively, run `python3 run_demo.py` and visit the printed local address. `python package_demo.py` creates the self-contained `dist/Engagement_Lab_v0.2.html` and source ZIP.
+Open `web/index.html` directly in a modern browser. No installation, internet connection or API key is needed to explore the included real, precomputed results. Alternatively, run `python3 run_demo.py` and visit the printed local address. `python package_demo.py` creates the self-contained `dist/Engagement_Lab_v0.2.html` and source ZIP. For publication, `python build_site.py` builds `dist/site/` with versioned resource URLs and an optional-refresh notice for open tabs. The deployment workflow checks the actual published files. See the [publishing guide in Chinese](docs/publishing_guide_zh.md) for the local-test-PR-deploy procedure.
 
 The app opens with the research question, equal-workload results and four deterministic cases, including failures. The other views remain Support queue, Model evidence, and Research & scope. Choose a module, model and review capacity; inspect a record and its observations. R's calculation is exposed component by component. Historical outcomes are visible in the research overview, and hidden in the support queue until explicitly revealed. Filters recalculate the selected cohort's ranking metrics; global results are labelled separately.
 
@@ -54,7 +54,9 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 python build_reference.py
 python -m pytest -q
-node --test tests/test_web.cjs
+node --test tests/test_*.cjs
+python build_site.py
+python preserve_assets.py
 python package_demo.py
 ```
 

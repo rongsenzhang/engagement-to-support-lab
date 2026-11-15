@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="lab-build-id" content="">
+  <meta name="lab-version" content="">
   <meta name="description" content="Compare day-28 activity indicators, assessment context and a transparent reference rule using historical OULAD records. Independent v0.2 research prototype.">
   <title>Engagement-to-Support Lab</title>
   <link rel="stylesheet" href="styles.css">
@@ -16,6 +18,17 @@
     </a>
     <div class="header-status"><span class="status-dot"></span>Independent research · <a href="https://github.com/rongsenzhang/engagement-to-support-lab" target="_blank" rel="noopener noreferrer">Source &amp; history ↗</a></div>
   </header>
+  <section id="update-notice" class="update-notice" aria-label="Demo update" hidden>
+    <div class="update-copy">
+      <strong>An updated demo is available.</strong>
+      <p id="update-message"></p>
+    </div>
+    <div class="update-actions">
+      <button id="update-refresh" class="primary-button" type="button">Refresh now</button>
+      <button id="update-later" class="quiet-button" type="button">Later</button>
+    </div>
+  </section>
+  <div id="update-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
   <div class="page-shell">
     <section class="hero" aria-label="About this prototype">
       <div><p class="eyebrow">OULAD / DAY-28 RESEARCH SNAPSHOT</p><h1>Which records should a tutor review?</h1><p class="hero-description">Compare activity, assessment context and a transparent reference rule against later module withdrawal. Inspect the evidence and the limits of each score.</p></div>
@@ -34,5 +47,6 @@
   <script src="data.js"></script>
   <script src="reference-data.js"></script>
   <script src="app.js"></script>
+  <script src="updates.js"></script>
 </body>
 </html>

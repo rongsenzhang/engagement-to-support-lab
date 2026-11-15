@@ -20,7 +20,7 @@ jobs:
     needs: verify
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
     permissions:
       contents: read
       pages: write
@@ -33,16 +33,64 @@ jobs:
         uses: actions/checkout@v6
         with:
           persist-credentials: false
+          # Retain assets referenced by historical main HTML, including skipped deployments.
+          fetch-depth: 0
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
+      - name: Set up Python for the static build and publication check
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Build content-versioned site
+        run: |
+          python build_site.py --revision "$GITHUB_SHA"
+          python preserve_assets.py
+
       - name: Upload static demo
         uses: actions/upload-pages-artifact@v4
         with:
-          path: web
+          path: dist/site
           include-hidden-files: true
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      # Canonical HTML may still be cached for ten minutes after deployment.
+      # A green workflow now requires the public files to match this revision.
+      - name: Verify the published HTML, revision and asset checksums
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: python check_deployment.py --url "$PAGE_URL" --timeout 720 --interval 20
+
+      - name: Retain publication evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pages-publication-check
+          path: |
+            dist/site/version.json
+            dist/site/compatibility.json
+            dist/deployment-check.json
+          if-no-files-found: ignore
+
+      - name: Summarize publication check
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          report_path = Path('dist/deployment-check.json')
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+              if not report_path.exists():
+                  summary.write('Publication was not verified. Inspect the failed build/deploy step.\n')
+              else:
+                  report = json.loads(report_path.read_text())
+                  result = 'PASS' if report['passed'] else 'FAIL'
+                  summary.write('Published site check: **' + result + '**\n\n')
+                  summary.write('Expected commit: `' + report.get('expected_revision', 'unknown') + '`\n\n')
+                  summary.write('The pages-publication-check artifact contains the manifest and HTTP diagnostics.\n')
+          PY
