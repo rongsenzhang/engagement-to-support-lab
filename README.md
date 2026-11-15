@@ -1,4 +1,4 @@
-# Engagement-to-Support Lab — v0.3 research preview
+# Engagement-to-Support Lab — v0.4 research and tutor-practice preview
 
 [Live demo](https://rongsenzhang.github.io/engagement-to-support-lab/) · [Releases](https://github.com/rongsenzhang/engagement-to-support-lab/releases) · [Research roadmap](ROADMAP.md) · [Working practices and rollback](CONTRIBUTING.md) · [Change history](CHANGELOG.md)
 
@@ -10,6 +10,13 @@ isolates the assessment-feature increment; A→C also adds trend. The original q
 and scores remain available. See the [fixed protocol](docs/protocol_v0.3.md),
 [results and decisions](docs/results_v0.3.md), and [verification](docs/verification_v0.3.md).
 
+**v0.4 adds Tutor practice:** 50 fictional records, four structured tasks,
+initial/revised interpretations, a manual five-record review list, local session
+export/restore and a complete facilitator kit. **System and materials ready;
+participants and real findings pending.** Start with Practice, which is excluded
+from study summaries. See the [study kit](docs/study/README.md),
+[Chinese project guide](docs/project_guide_zh.md) and [verification](docs/verification_v0.4.md).
+
 An independent application project for Rongsen Zhang, developed with AI assistance. It explores the research-to-indicator and validation work described in the University of Stirling–Kortext KTP vacancy FAC02157. It is not a Kortext product or an integration with Stream, and does not implement the company's proprietary algorithm.
 
 ## Open the working demo
@@ -17,13 +24,13 @@ An independent application project for Rongsen Zhang, developed with AI assistan
 **Website:** https://rongsenzhang.github.io/engagement-to-support-lab/  
 **Source repository:** https://github.com/rongsenzhang/engagement-to-support-lab
 
-The v0.2 preview was checked in a real browser at desktop (1280 × 720) and mobile (390 × 844) viewport sizes on 13 November 2026; see [verification and screenshots](docs/verification_v0.2.md). This is responsive browser testing, not a physical-phone or screen-reader audit. Initial loading downloads the historical demonstration results; no login or API key is needed. Deployment instructions are in `docs/deployment.md`.
+The v0.4 preview was checked in a real browser at desktop (1280 × 720) and mobile (390 × 844) viewport sizes on 15 November 2026; see [verification and screenshots](docs/verification_v0.4.md). This is responsive browser testing, not a physical-phone or screen-reader audit. Initial loading downloads the historical demonstration results; no login or API key is needed. Deployment instructions are in `docs/deployment.md`.
 
-Open `web/index.html` directly in a modern browser. No installation, internet connection or API key is needed to explore the included real, precomputed results. Alternatively, run `python3 run_demo.py` and visit the printed local address. `python package_demo.py` creates the self-contained `dist/Engagement_Lab_v0.3.html` and source ZIP. All analyses shown in the browser are already generated; running a new experiment is optional.
+Open `web/index.html` directly in a modern browser. No installation, internet connection or API key is needed to explore the included real, precomputed results. Alternatively, run `python3 run_demo.py` and visit the printed local address. `python package_demo.py` creates the self-contained `dist/Engagement_Lab_v0.4.html` and source ZIP. All analyses shown in the browser are already generated; running a new experiment is optional.
 
-The app opens with the research question, equal-workload results and four deterministic cases, including failures. The other views include Support queue, Model evidence, Sources & scope and Course robustness. Choose a module, model and review capacity; inspect a record and its observations. R's calculation is exposed component by component. Historical outcomes are visible in the research overview, and hidden in the support queue until explicitly revealed. Filters recalculate the selected cohort's ranking metrics; global results are labelled separately.
+The app opens with the research question, equal-workload results and four deterministic cases, including failures. The other views include Review queue, Model evidence, Course robustness, Tutor practice and Sources & scope. Choose a module, model and review capacity; inspect a record and its observations. R's calculation is exposed component by component. Historical outcomes are visible in the research overview, and hidden in the support queue until explicitly revealed. Filters recalculate the selected cohort's ranking metrics; global results are labelled separately.
 
-The browser explores precomputed predictions and the separately generated R1 index. It does not train a model or score uploaded data. There is no data upload, messaging, live institutional integration or external AI call.
+The browser explores precomputed predictions and the separately generated R1 index. It does not train a model or score uploaded data. The trial can read a locally chosen session export for restoration. There is no server upload, messaging, live institutional integration or external AI call.
 
 ## What v0.2 establishes
 
@@ -92,6 +99,30 @@ The 2014J comparison is retrospective/exploratory; only development blocks choos
 the nonlinear comparator. Grouped fitting, selection, calibration and evaluation
 are kept apart, and no outer/test result chooses the displayed default model.
 
+## Use the v0.4 study kit
+
+Open **Tutor practice** and begin Practice. Work through patterns, missing
+submission context, five of fifty records, and an illustrative prediction error.
+Save the initial judgement before revealing context; record revisions separately.
+Switching lab views pauses the timer and retains notes, while reloading loses
+unsaved state. Preview and download JSON to retain or restore a session; CSV
+supports manual analysis.
+
+Facilitated mode is for actual consenting adult volunteers only. Use the
+[participant information](docs/study/participant_information.md) and
+[Chinese facilitator guide](docs/study/facilitator_guide.md). Keep actual records
+in ignored `private_study/sessions/`, never in `web/` or a public PR. Then run:
+
+```sh
+python src/study_summary.py --input-dir private_study/sessions --output private_study/summary.json
+```
+
+An empty directory produces zero participants. Practice and unfinished sessions
+are excluded; final stopped sessions are distinguished from completed sessions.
+The script reports descriptive counts only, not automatically generated themes
+or proof that a real participant attended. Complete the analysis template from
+actual observations after the agreed withdrawal deadline.
+
 ## What was implemented
 
 - Day28 eligibility and point-in-time features, with future events excluded.
@@ -119,9 +150,11 @@ This is historical, single-institution, distance-learning evidence. The outcome 
 - `docs/research_notes.md` and `docs/research.json`: literature, feature hypotheses and limits.
 - `docs/criteria_evidence.md`: criteria mapping, including existing credentials and work still planned.
 - `docs/independent_review.md`: independent methodology review.
-- `docs/demo_script.md`: short demonstration narrative.
+- `docs/demo_script_v0.4.md`: current five-minute walkthrough; `docs/demo_script.md` preserves the original narrative.
 - `docs/decision_log.md`: actual scope and implementation choices.
 - `docs/user_study_plan.md`: proposed teacher feedback study, not conducted research.
+- `docs/study/`: ready-to-use participant information, facilitator script, observation and analysis templates, and adoption proposal.
+- `src/study_summary.py`: local summary of final, de-identified session exports.
 - `tests/test_pipeline.py`, `tests/test_reference.py`, `tests/test_web.cjs`: executable verification, including explicitly simulated browser interactions.
 
 ## Data attribution and software

@@ -53,3 +53,20 @@ adds trend. Undefined values remain null, not zero. Development outer prediction
 come from separate fitted models; their pooled metrics are secondary to per-module
 and macro results. Stress cases identify simulated impairments and preserve
 original versus perturbed evidence, scores and explanations.
+
+
+## `LAB_STUDY_CASES` and local session exports — v0.4
+
+`web/study-data.js` provides 50 explicitly fictional `SYN-*` records and four
+fixed tasks. No record, index, probability or outcome is derived from an OULAD
+student or model. `web/study.js` owns in-memory task/session state, schema-checked
+JSON restore and formula-safe CSV export. It never writes to the public research
+payload or automatically persists/sends notes.
+
+Exports distinguish practice/facilitated mode, participant code, broad role,
+agreement and withdrawal deadline, session/task statuses, active time, assistance,
+initial/revised response, manual case selection, observations and debrief. The
+schema is validated in both the browser and `src/study_summary.py`. Session files
+are private working records, not public research artifacts. Practice and
+unfinished sessions cannot become participant counts in the summary. Actual
+attendance and agreement must still be confirmed outside software.

@@ -62,6 +62,8 @@ jobs:
           node --check web/reference-data.js
           node --check web/robustness-data.js
           node --check web/robustness.js
+          node --check web/study-data.js
+          node --check web/study.js
 
       - name: Check rendering and interactions in a simulated DOM
         run: node --test tests/test_*.cjs

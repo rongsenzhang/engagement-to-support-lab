@@ -6,7 +6,7 @@ import re
 from zipfile import ZipFile, ZIP_DEFLATED
 
 ROOT = Path(__file__).resolve().parent
-VERSION = '0.3'
+VERSION = '0.4'
 
 def main():
     dist = ROOT / 'dist'
