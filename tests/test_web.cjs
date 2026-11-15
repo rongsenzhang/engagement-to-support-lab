@@ -140,7 +140,7 @@ test('overview presents all three actual workload results with exploratory limit
     const result = a.window.LAB_REFERENCE.comparison.models.find(m => m.id === model);
     assert.ok(cards[i].includes(`>${result.tp}<span> / ${result.k}</span>`));
   }
-  assert.match(a.html, /already inspected in v0\.1/);
+  assert.match(a.html, /already inspected in the original experiment/);
   assert.match(a.html, /does not show prevented withdrawals/);
   assert.equal(a.navigation.find(n => n.dataset.view === 'overview').attributes['aria-current'], 'page');
 });

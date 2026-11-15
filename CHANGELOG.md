@@ -2,8 +2,9 @@
 
 Versions identify this independent research prototype, not Kortext Stream releases.
 
-## v0.4 — Unreleased (15 November 2026)
+## v0.4 — merged and deployed, 2026-11-15 (not tagged)
 
+- Published through [PR #10](https://github.com/rongsenzhang/engagement-to-support-lab/pull/10) at main commit `9f759ce6940534455a90d88fc778eae4557be7b1`; [Pages run 43769188941](https://github.com/rongsenzhang/engagement-to-support-lab/actions/runs/43769188941) succeeded. PR #9 first merged the implementation into the research branch; PR #10 completed its delivery to main. No v0.4 release tag or GitHub Release download has been created.
 - Added 50 explicitly synthetic learner cases and four tutor-practice tasks.
 - Added optional facilitated sessions with anonymous codes, actual consent
   confirmation, initial/revised responses, five-of-fifty selection, approximate
@@ -17,13 +18,15 @@ Versions identify this independent research prototype, not Kortext Stream releas
   Study records are excluded from Git and source packages.
 
 
-## Unreleased — v0.3 course robustness, 2026-11-15
+## v0.3 course robustness — merged and deployed, 2026-11-15 (not tagged)
+
+- [PR #8](https://github.com/rongsenzhang/engagement-to-support-lab/pull/8) merged at main commit `218e5ecdd55a5abaa38d6bc947411a3843dc9404`; [Pages run 43768353345](https://github.com/rongsenzhang/engagement-to-support-lab/actions/runs/43768353345) succeeded.
 
 - Add per-module historical comparisons and a fit-only course-prior baseline, with explicit B→C assessment and A→C trend-plus-assessment contrasts.
 - Fix the protocol before fitting; add student-disjoint development leave-module-out evaluation, separate calibration and one bounded nonlinear comparator.
 - Simulate late activity, late submissions and missing activity feeds while holding day-28 population/outcomes fixed; expose ranking and explanation changes with data-quality warnings.
 - Add the interactive Course robustness view, result exports and an offline package containing the separate analysis payload.
-- Preserve v0.1/v0.2 results and the default historical C queue. This feature branch does not require optional deployment-maintenance PR #5.
+- Preserve v0.1/v0.2 results and the default historical C queue. This milestone does not require optional deployment-maintenance PR #5.
 
 ## v0.2 research preview — merged and deployed, 2026-11-13 (not tagged)
 
