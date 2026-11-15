@@ -1,6 +1,6 @@
 # Roadmap: from public-reference baseline to a research-led demonstrator
 
-Status: v0.2 implementation prepared on 13 November 2026; later research remains planned. The published baseline is our independent v0.1 prototype until the v0.2 branch is pushed, reviewed and deployed. This project is not a reproduction of Kortext's proprietary algorithm and has not been validated against Kortext.
+Status: v0.2 was merged and deployed on 13 November 2026 (PR #3). v0.3 course-robustness analysis is implemented and locally verified; the v0.4 system/study kit is being integrated on a separate research branch. The owner confirmed on 15 November that v0.4 participants will be arranged later; software readiness will not be described as completed participant research. Optional deployment-maintenance PR #5 is not a prerequisite. This project is not a reproduction of Kortext's proprietary algorithm and has not been validated against Kortext.
 
 ## What the recruitment brief actually asks
 
@@ -26,7 +26,7 @@ Kortext already describes alerts, assessment-related information, interventions,
 
 ### v0.2 — documented baseline and diagnosis
 
-Implementation evidence: [product comparison](docs/product_comparison.md), [company research](docs/company_research_v0.2.md), [committed protocol](docs/protocol_v0.2.md), [reference engine](src/reference.py), [results](docs/results_v0.2.md), and [verification/status](docs/verification_v0.2.md). The new overview and R1 calculation are implemented. GitHub publication is a separate pending step; later milestones below remain uncompleted.
+Implementation evidence: [product comparison](docs/product_comparison.md), [company research](docs/company_research_v0.2.md), [committed protocol](docs/protocol_v0.2.md), [reference engine](src/reference.py), [results](docs/results_v0.2.md), and [verification/status](docs/verification_v0.2.md). The overview and R1 calculation were published through PR #3 at main commit `c648e192fa9dd629cb70ff4fb61c11296e506ca1`.
 
 Purpose: make clear what the existing commercial product does, what our reference implements, and why further research is justified.
 
@@ -46,8 +46,12 @@ Acceptance:
 
 Primary question: **Does assessment context add useful information within courses and across held-out courses, or does the pooled improvement mainly reflect differences between courses?**
 
+The [v0.3 protocol](docs/protocol_v0.3.md) was committed before new evaluation at
+`c3172732fa333352c270e0214526e2da22c09863`. B→C isolates the additional assessment
+features; A→C also adds trend. Both comparisons must be reported distinctly.
+
 Experiments:
-1. Report A/C differences separately for every module, with denominators, prevalence, average precision, Brier score, and precision/recall at the same review capacity.
+1. Report B/C and A/C differences separately for every module, with denominators, prevalence, average precision, Brier score, and precision/recall at the same review capacity.
 2. Add a course-prior baseline learned only from training data. For an unseen course use a documented global-prior fallback. This checks whether pooled ranking is largely explained by course differences.
 3. On development data, run a prespecified leave-course-out study with student grouping, inner model selection and calibration separated from the outer evaluation. Report both pooled and per-course results; do not silently exclude unfavourable courses.
 4. Add one controlled nonlinear comparator only after fixing the comparison protocol. Use the same available features and population, and disclose the search budget. Model complexity is a comparison question, not the intended innovation.

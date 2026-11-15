@@ -61,3 +61,29 @@ that experiment.
 See [results](results_v0.2.md), [product diagnosis](product_comparison.md) and
 [verification](verification_v0.2.md). Further course-effect research and actual
 tutor feedback remain future work.
+
+
+## v0.3 decisions — 15 November 2026
+
+v0.2 was subsequently merged through PR #3 and deployed on 13 November. The
+older local-only status above records its original preparation stage.
+
+- Fixed protocol in commit `c3172732fa333352c270e0214526e2da22c09863` before new
+  evaluation. B/C isolates added assessment context; A/C also adds trend.
+- Kept historical predictions unchanged and added a training-only course prior.
+  Per-course B/C findings are mixed: gains in BBB/DDD/FFF, losses in EEE/GGG.
+- Used five development leave-course-out folds, student-disjoint fitting and
+  calibration, and a fixed 60-fit inner budget for the nonlinear comparator.
+  N improves macro AP but has worse Brier than C and does not win every course.
+- Kept C as the original default. No outer result triggered new tuning or a
+  silently substituted model. Full negative results remain in the report.
+- Simulated unavailable activity/submission events at the unchanged day-28
+  boundary. A changed score caused by delayed records is not evidence of a
+  changed learning state. Cases are selected by rank movement, never success.
+- Added a clearly labelled post-result applicability diagnosis: EEE/GGG have no
+  eligible assessment due by day 28. No model or result changed in response.
+- User chose to prepare v0.4 software and study materials now; participants will
+  be arranged later. No human findings may be recorded before actual sessions.
+- Development does not depend on optional deployment-maintenance PR #5.
+
+See [v0.3 findings](results_v0.3.md) and [actual checks](verification_v0.3.md).

@@ -2,7 +2,15 @@
 
 Versions identify this independent research prototype, not Kortext Stream releases.
 
-## Unreleased — v0.2 research preview, 2026-11-13
+## Unreleased — v0.3 course robustness, 2026-11-15
+
+- Add per-module historical comparisons and a fit-only course-prior baseline, with explicit B→C assessment and A→C trend-plus-assessment contrasts.
+- Fix the protocol before fitting; add student-disjoint development leave-module-out evaluation, separate calibration and one bounded nonlinear comparator.
+- Simulate late activity, late submissions and missing activity feeds while holding day-28 population/outcomes fixed; expose ranking and explanation changes with data-quality warnings.
+- Add the interactive Course robustness view, result exports and an offline package containing the separate analysis payload.
+- Preserve v0.1/v0.2 results and the default historical C queue. This feature branch does not require optional deployment-maintenance PR #5.
+
+## v0.2 research preview — merged and deployed, 2026-11-13 (not tagged)
 
 - Add a primary-source company and competitor diagnosis, with a capability matrix separating known facts, our implementation and unknown proprietary details.
 - Commit the R1 protocol before evaluation; add a deterministic, equally weighted reference index and separate reproducible artifacts. Preserve ten original experiment files with SHA-256 checks.
@@ -10,7 +18,7 @@ Versions identify this independent research prototype, not Kortext Stream releas
 - Expose reference arithmetic and applicability, use index units rather than probability, and export explicit CSV score units. Invalid reference overlays fall back to original results.
 - Compare the same 637-record workload: R includes 157 later withdrawals, C 162 and A 121. R has higher ROC-AUC than C; no universal winner or causal benefit is claimed.
 - Extend CI to rebuild the overlay, verify provenance and run simulated-DOM interaction checks; include R data in offline packaging.
-- Complete an independent arithmetic/code review and real-browser desktop/mobile-width smoke checks, with screenshots and a downloaded-CSV outcome-visibility check. Publication state is recorded by the feature PR, Actions and release history; this remains an unreleased entry until merged and deployed.
+- Complete an independent arithmetic/code review and real-browser desktop/mobile-width smoke checks, with screenshots and a downloaded-CSV outcome-visibility check. PR #3 merged at `c648e192fa9dd629cb70ff4fb61c11296e506ca1`; Pages run `43432542957` succeeded. No v0.2 release tag was created.
 
 ## Maintenance — 2026-11-08
 

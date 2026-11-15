@@ -1,8 +1,14 @@
-# Engagement-to-Support Lab — v0.2 research preview
+# Engagement-to-Support Lab — v0.3 research preview
 
 [Live demo](https://rongsenzhang.github.io/engagement-to-support-lab/) · [Releases](https://github.com/rongsenzhang/engagement-to-support-lab/releases) · [Research roadmap](ROADMAP.md) · [Working practices and rollback](CONTRIBUTING.md) · [Change history](CHANGELOG.md)
 
 The initial experiment is preserved as **v0.1.0**. v0.2 adds a source-linked product diagnosis, a transparent reference index and inspectable comparisons without replacing any v0.1 predictions. The roadmap separates public product evidence, independently chosen baselines and proposed research; it is not a claim to reproduce Kortext's proprietary system. The live URL follows deployed `main`; a local or feature-branch preview is not automatically the published version.
+
+**v0.3 adds Course robustness:** per-module comparisons, a training-only course
+prior, development leave-module-out experiments and simulated data delays. B→C
+isolates the assessment-feature increment; A→C also adds trend. The original queue
+and scores remain available. See the [fixed protocol](docs/protocol_v0.3.md),
+[results and decisions](docs/results_v0.3.md), and [verification](docs/verification_v0.3.md).
 
 An independent application project for Rongsen Zhang, developed with AI assistance. It explores the research-to-indicator and validation work described in the University of Stirling–Kortext KTP vacancy FAC02157. It is not a Kortext product or an integration with Stream, and does not implement the company's proprietary algorithm.
 
@@ -13,9 +19,9 @@ An independent application project for Rongsen Zhang, developed with AI assistan
 
 The v0.2 preview was checked in a real browser at desktop (1280 × 720) and mobile (390 × 844) viewport sizes on 13 November 2026; see [verification and screenshots](docs/verification_v0.2.md). This is responsive browser testing, not a physical-phone or screen-reader audit. Initial loading downloads the historical demonstration results; no login or API key is needed. Deployment instructions are in `docs/deployment.md`.
 
-Open `web/index.html` directly in a modern browser. No installation, internet connection or API key is needed to explore the included real, precomputed results. Alternatively, run `python3 run_demo.py` and visit the printed local address. `python package_demo.py` creates the self-contained `dist/Engagement_Lab_v0.2.html` and source ZIP.
+Open `web/index.html` directly in a modern browser. No installation, internet connection or API key is needed to explore the included real, precomputed results. Alternatively, run `python3 run_demo.py` and visit the printed local address. `python package_demo.py` creates the self-contained `dist/Engagement_Lab_v0.3.html` and source ZIP. All analyses shown in the browser are already generated; running a new experiment is optional.
 
-The app opens with the research question, equal-workload results and four deterministic cases, including failures. The other views remain Support queue, Model evidence, and Research & scope. Choose a module, model and review capacity; inspect a record and its observations. R's calculation is exposed component by component. Historical outcomes are visible in the research overview, and hidden in the support queue until explicitly revealed. Filters recalculate the selected cohort's ranking metrics; global results are labelled separately.
+The app opens with the research question, equal-workload results and four deterministic cases, including failures. The other views include Support queue, Model evidence, Sources & scope and Course robustness. Choose a module, model and review capacity; inspect a record and its observations. R's calculation is exposed component by component. Historical outcomes are visible in the research overview, and hidden in the support queue until explicitly revealed. Filters recalculate the selected cohort's ranking metrics; global results are labelled separately.
 
 The browser explores precomputed predictions and the separately generated R1 index. It does not train a model or score uploaded data. There is no data upload, messaging, live institutional integration or external AI call.
 
@@ -54,7 +60,7 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 python build_reference.py
 python -m pytest -q
-node --test tests/test_web.cjs
+node --test tests/test_*.cjs
 python package_demo.py
 ```
 
@@ -63,6 +69,28 @@ Rebuilding R requires a **Git checkout with history** so the separately committe
 No raw-data download or retraining is needed for v0.2. The generator verifies the ten frozen v0.1 files, writes only `artifacts/v0.2/` and `web/reference-data.js`, and records protocol/code/input/output hashes in a manifest. Repeating it with unchanged inputs reproduces the outputs. CI checks tests, regeneration, JavaScript syntax, simulated-DOM interactions and standalone packaging. Simulated-DOM checks do not establish browser layout or accessibility conformance.
 
 To reproduce the original model experiment, use a **separate checkout of `v0.1.0`** and follow that release's README (`download_data.py`, then `src/pipeline.py`). The raw archive transfers about 45 MB and extracts to about 450 MB. Re-running v0.1 in the v0.2 working tree changes frozen artifacts and is intentionally rejected by the R builder. The original archive checksum is in `artifacts/metrics.json`. Only load trusted joblib files; that serialization can execute code.
+
+## Reproduce v0.3
+
+The v0.3 generator uses the original saved feature tables and trusted original
+models, plus raw event timestamps and student grouping. With the environment above:
+
+```sh
+# Only needed if the original OULAD CSV files are not already available locally.
+python download_data.py
+python build_robustness.py --raw-dir data/raw
+python -m pytest -q tests
+node --test tests/test_*.cjs
+python package_demo.py
+```
+
+An existing data directory can be supplied through `--raw-dir`; it is read, not
+modified. Outputs go to `artifacts/v0.3/` and `web/robustness-data.js`. The generator
+does not rerun or overwrite the v0.1 experiment. The full experiment is separate
+from the quick software tests, which can use committed results and small fixtures.
+The 2014J comparison is retrospective/exploratory; only development blocks choose
+the nonlinear comparator. Grouped fitting, selection, calibration and evaluation
+are kept apart, and no outer/test result chooses the displayed default model.
 
 ## What was implemented
 
@@ -83,6 +111,9 @@ This is historical, single-institution, distance-learning evidence. The outcome 
 - `docs/results.md`: actual experimental findings and cautions.
 - `docs/results_v0.2.md`: reference comparison, metric trade-offs and next decision.
 - `docs/protocol_v0.2.md`: separately committed R1 specification, population and case rules.
+- `docs/protocol_v0.3.md`: course-robustness experiment fixed before evaluation.
+- `docs/results_v0.3.md`: actual per-course, held-out-course and stress findings.
+- `artifacts/v0.3/` and `web/robustness-data.js`: generated reports and the separate analysis payload.
 - `docs/product_comparison.md` and `docs/company_research_v0.2.md`: sourced product diagnosis.
 - `artifacts/v0.2/manifest.json`: frozen baseline, protocol, input and output provenance.
 - `docs/research_notes.md` and `docs/research.json`: literature, feature hypotheses and limits.
