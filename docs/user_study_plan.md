@@ -2,6 +2,10 @@
 
 **Status: planned; no volunteers recruited, sessions conducted or findings collected.** This is a small formative study of understanding and workflow suitability. It is not a validation of intervention effectiveness or a completed mixed-method research claim.
 
+The v0.4 [software and facilitator kit](study/README.md) now implement these
+materials. The owner confirmed that volunteers will be arranged later. This
+plan remains the study protocol, not a report of completed sessions.
+
 ## Purpose and participants
 
 Explore whether prospective users understand the explanations, notice missing context and use the review-capacity control sensibly. Invite **3–5 adult volunteers** with relevant experience: preferably tutors plus a student-support or learning-analytics professional. Use a convenience sample and record only broad role categories. The sample cannot represent all universities or establish statistical generalisability.
@@ -42,7 +46,7 @@ Use neutral follow-up prompts, such as “What led you to that interpretation?�
 
 ## Analysis and decisions
 
-Capture task completion, requests for help, approximate completion time and specific misunderstandings. With this small sample, report counts and descriptive observations rather than population-level percentages or significance tests.
+Capture task completion, requests for help, approximate active-task time, reported separately for completed and skipped tasks and specific misunderstandings. With this small sample, report counts and descriptive observations rather than population-level percentages or significance tests.
 
 Code de-identified notes using initial categories of **clarity**, **missing context**, **trust/calibration**, **workflow fit** and **suggested action**, while allowing new categories. Keep observations separate from the researcher's interpretation. Revisit contradictory examples rather than discarding them. A second reviewer can examine a subset if one is genuinely available; do not claim independent coding otherwise.
 

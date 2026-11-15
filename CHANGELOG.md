@@ -2,6 +2,21 @@
 
 Versions identify this independent research prototype, not Kortext Stream releases.
 
+## v0.4 — Unreleased (15 November 2026)
+
+- Added 50 explicitly synthetic learner cases and four tutor-practice tasks.
+- Added optional facilitated sessions with anonymous codes, actual consent
+  confirmation, initial/revised responses, five-of-fifty selection, approximate
+  active time, separate notes, pause/skip and early-stop controls.
+- Added local JSON/CSV export, validated restore and a private summary tool which
+  excludes practice and unfinished sessions and rejects duplicate participants.
+- Prepared participant information, Chinese facilitator script, blank observation
+  and analysis templates, and a future adoption proposal. Real participants and
+  user findings are pending, as requested by the owner.
+- Integrated the trial as a separate route while retaining v0.1–v0.3 research.
+  Study records are excluded from Git and source packages.
+
+
 ## Unreleased — v0.3 course robustness, 2026-11-15
 
 - Add per-module historical comparisons and a fit-only course-prior baseline, with explicit B→C assessment and A→C trend-plus-assessment contrasts.

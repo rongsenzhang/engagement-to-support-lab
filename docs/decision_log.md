@@ -87,3 +87,20 @@ older local-only status above records its original preparation stage.
 - Development does not depend on optional deployment-maintenance PR #5.
 
 See [v0.3 findings](results_v0.3.md) and [actual checks](verification_v0.3.md).
+
+
+## v0.4 system decisions — 15 November 2026
+
+- Implemented synthetic practice independently from historical OULAD analysis.
+  Invented probabilities and outcomes are visibly labelled as invented.
+- Four tasks follow the existing study plan. Initial context judgements are saved
+  before the hypothetical extension is disclosed; revisions remain separate.
+- Manual five-of-fifty selection, pause/skip/early-stop and separate observation
+  fields make the workflow inspectable without contacting real learners.
+- Notes remain in memory until explicit export; restoring JSON validates the
+  schema. Private study records are excluded from Git and source packages.
+- Summary counts exclude practice and unfinished sessions, reject duplicates and
+  do not generate themes from text. Real participant research remains pending.
+- Code review corrected internally inconsistent synthetic activity timings and
+  boundary cases in session restoration/logging. These are engineering findings,
+  not changes justified by participant feedback.

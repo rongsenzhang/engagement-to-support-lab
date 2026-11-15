@@ -45,7 +45,7 @@ function app(options = {}) {
     return nodes.get(id);
   };
   const main = getNode('main');
-  const navigation = ['overview', 'queue', 'evidence', 'robustness', 'research'].map(
+  const navigation = ['overview', 'queue', 'evidence', 'robustness', 'trial', 'research'].map(
     view => element({ dataset: { view } })
   );
   const downloads = [], blobs = [], events = {};
@@ -76,6 +76,7 @@ function app(options = {}) {
     vm.runInContext(source['reference-data.js'], context, { filename: 'reference-data.js' });
     if (options.referenceEdit) options.referenceEdit(window.LAB_REFERENCE);
   }
+  if (options.studyUI) window.LAB_STUDY_UI = options.studyUI;
   vm.runInContext(source['app.js'], context, { filename: 'app.js' });
   return {
     main, window, navigation, nodes,
@@ -296,4 +297,23 @@ test('missing base results produce a clear unavailable state', () => {
   const a = app({ omitBase: true });
   assert.match(a.html, /Research results are not available/);
   assert.doesNotMatch(a.html, /157/);
+});
+
+
+test('trial routing pauses the active session before leaving and restores the module on return', () => {
+  let renders = 0, pauses = 0;
+  const instance = app({hash:'#trial', studyUI: {
+    render(main) { renders += 1; main.innerHTML = 'Synthetic task state retained'; },
+    suspend() { pauses += 1; },
+  }});
+  assert.equal(renders, 1);
+  assert.equal(pauses, 0);
+  instance.route('queue');
+  assert.equal(pauses, 1);
+  instance.route('research');
+  assert.equal(pauses, 1);
+  instance.route('trial');
+  assert.equal(renders, 2);
+  assert.match(instance.html, /Synthetic task state retained/);
+  assert.match(app({hash:'#trial'}).html, /Tutor practice is unavailable/);
 });
