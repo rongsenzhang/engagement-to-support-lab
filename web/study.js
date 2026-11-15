@@ -47,7 +47,7 @@
         initial_response: '', proposed_next_step: '', checks: [], initial_saved_at: null,
         context_revealed: false, revised_response: '', revision_saved_at: null,
         selected_case_ids: [], observation: '', participant_explanation: '' })),
-      feedback: Object.fromEntries(FEEDBACK_FIELDS.map(field => [field, ''])), events: []
+      feedback: Object.fromEntries(FEEDBACK_FIELDS.map(field => [field, ''])), events: [], events_truncated: false
     };
   }
   const taskFor = (session, id) => session.tasks.find(task => task.id === id) || fail('Unknown task.');
@@ -62,7 +62,9 @@
   }
   function event(session, id, kind, now) {
     // Keep only meaningful task transitions; never record keystrokes or identities.
-    if (session.events.length >= 500) fail('This session has reached its event limit. Export it before continuing.');
+    // The bounded history must never block a response, pause or route change.
+    // Current task fields remain authoritative after the history stops growing.
+    if (session.events.length >= 500) { session.events_truncated = true; return; }
     session.events.push({ task_id: id, event: kind, at: iso(now) });
   }
   function elapsed(task, now) {
@@ -94,6 +96,8 @@
     if (id === 'context' && task.initial_saved_at && ['initial_response', 'proposed_next_step'].includes(field)) fail('The saved initial judgment is kept unchanged. Add a revised response below.');
     if (field === 'revised_response' && !task.context_revealed) fail('Reveal the hypothetical context before revising.');
     task[field] = value;
+    if (['initial_response', 'proposed_next_step'].includes(field)) task.initial_saved_at = null;
+    if (field === 'revised_response') task.revision_saved_at = null;
   }
   function setCheck(session, id, key, selected) {
     const task = running(session, id);
@@ -110,7 +114,7 @@
   }
   function revealContext(session, now = Date.now()) {
     const task = running(session, 'context');
-    if (!task.initial_saved_at) fail('Save the initial response before revealing context.');
+    if (!hasSavedInitial(task)) fail('Save a complete initial response and proposed next check before revealing context.');
     if (task.context_revealed) return;
     task.context_revealed = true;
     event(session, 'context', 'context_revealed', now);
@@ -126,6 +130,10 @@
     if (!DATA.cases.some(item => item.id === id)) fail('Unknown synthetic case.');
     if (selected && !task.selected_case_ids.includes(id) && task.selected_case_ids.length >= 5) fail('Capacity is five records. Deselect one before adding another.');
     task.selected_case_ids = selected ? [...new Set([...task.selected_case_ids, id])].sort() : task.selected_case_ids.filter(item => item !== id);
+  }
+  function hasSavedInitial(task) {
+    return task.initial_saved_at !== null && task.started_at !== null && task.status !== 'pending' &&
+      task.initial_response.trim() !== '' && task.proposed_next_step.trim() !== '';
   }
   function completionProblem(task) {
     if (!task.initial_saved_at || !task.initial_response.trim() || !task.proposed_next_step.trim()) return 'Save an interpretation and proposed next check before completing.';
@@ -145,6 +153,7 @@
   }
   function requestHelp(session, id, now = Date.now()) {
     const task = running(session, id);
+    if (task.assistance_count >= Number.MAX_SAFE_INTEGER) fail('The help counter cannot increase further. Export this session.');
     task.assistance_count++;
     event(session, id, 'help_requested', now);
   }
@@ -172,7 +181,7 @@
     return result;
   }
   function validateSession(value) {
-    const rootKeys = ['schema_version', 'app_version', 'task_set_version', 'session_id', 'mode', 'participant_code', 'broad_role', 'adult_confirmed', 'consent_confirmed', 'withdrawal_deadline', 'started_at', 'ended_at', 'status', 'tasks', 'feedback', 'events'];
+    const rootKeys = ['schema_version', 'app_version', 'task_set_version', 'session_id', 'mode', 'participant_code', 'broad_role', 'adult_confirmed', 'consent_confirmed', 'withdrawal_deadline', 'started_at', 'ended_at', 'status', 'tasks', 'feedback', 'events', 'events_truncated'];
     exactKeys(value, rootKeys, 'session');
     if (value.schema_version !== 1 || value.app_version !== '0.4.0' || value.task_set_version !== DATA.task_set_version) fail('Unsupported study file version.');
     if (!text(value.session_id, 80) || !/^STUDY-[a-z0-9-]+$/i.test(value.session_id)) fail('Invalid session identifier.');
@@ -187,14 +196,16 @@
     value.tasks.forEach(task => {
       exactKeys(task, taskKeys, 'task');
       if (!TASK_IDS.includes(task.id) || !STATUSES.includes(task.status) || task.status === 'running' || task.timer_started_at !== null) fail('Saved tasks must be stopped or paused.');
-      if (!Number.isInteger(task.active_duration_ms) || task.active_duration_ms < 0 || task.active_duration_ms > 86400000 || !Number.isInteger(task.assistance_count) || task.assistance_count < 0 || task.assistance_count > 500) fail('Invalid task timing or help count.');
+      if (!Number.isInteger(task.active_duration_ms) || task.active_duration_ms < 0 || task.active_duration_ms > 86400000 || !Number.isSafeInteger(task.assistance_count) || task.assistance_count < 0) fail('Invalid task timing or help count.');
       if (TASK_FIELDS.some(field => !text(task[field]))) fail('Task text exceeds the allowed size.');
       for (const key of ['started_at', 'ended_at', 'initial_saved_at', 'revision_saved_at']) if (task[key] !== null && !date(task[key])) fail('Invalid task date.');
       if ((task.status === 'pending') !== (task.started_at === null)) fail('Task start metadata is inconsistent.');
       if ((['completed', 'skipped'].includes(task.status)) !== (task.ended_at !== null)) fail('Task ending metadata is inconsistent.');
+      if (task.initial_saved_at !== null && !hasSavedInitial(task)) fail('A saved initial response requires a started task, an interpretation and a proposed next check.');
       if (!Array.isArray(task.checks) || new Set(task.checks).size !== task.checks.length || task.checks.some(key => !Object.hasOwn(CHECKS, key))) fail('Invalid context checks.');
-      if (typeof task.context_revealed !== 'boolean' || (task.context_revealed && (task.id !== 'context' || !task.initial_saved_at || !task.initial_response.trim()))) fail('Context must follow a saved initial interpretation.');
+      if (typeof task.context_revealed !== 'boolean' || (task.context_revealed && (task.id !== 'context' || !hasSavedInitial(task)))) fail('Context must follow a complete saved initial interpretation.');
       if ((task.revised_response || task.revision_saved_at) && !task.context_revealed) fail('Revision cannot precede context disclosure.');
+      if (task.revision_saved_at !== null && !task.revised_response.trim()) fail('A saved revision requires a revised interpretation.');
       if (!Array.isArray(task.selected_case_ids) || task.selected_case_ids.length > 5 || new Set(task.selected_case_ids).size !== task.selected_case_ids.length || task.selected_case_ids.some(id => !DATA.cases.some(item => item.id === id)) || (task.id !== 'capacity' && task.selected_case_ids.length)) fail('Invalid capacity selection.');
       if (task.status === 'completed' && completionProblem(task)) fail('A completed task lacks its required response.');
     });
@@ -202,6 +213,7 @@
     exactKeys(value.feedback, FEEDBACK_FIELDS, 'feedback');
     if (FEEDBACK_FIELDS.some(field => !text(value.feedback[field]))) fail('Feedback exceeds the allowed size.');
     if (!Array.isArray(value.events) || value.events.length > 500) fail('Too many task events.');
+    if (typeof value.events_truncated !== 'boolean' || (value.events_truncated && value.events.length !== 500)) fail('Invalid event history truncation marker.');
     value.events.forEach(item => {
       exactKeys(item, ['task_id', 'event', 'at'], 'event');
       if (!TASK_IDS.includes(item.task_id) || !EVENTS.includes(item.event) || !date(item.at)) fail('Invalid task event.');
@@ -221,11 +233,11 @@
   }
   function exportCSV(session, now = Date.now()) {
     const s = snapshot(session, now);
-    const header = ['session_id', 'mode', 'participant_code', 'broad_role', 'session_status', 'task', 'task_status', 'active_seconds', 'help_requests', 'initial_response', 'initial_next_check', 'checks', 'context_revealed', 'revised_response', 'selected_cases', 'observation', 'participant_explanation', ...FEEDBACK_FIELDS];
+    const header = ['session_id', 'mode', 'participant_code', 'broad_role', 'session_status', 'task', 'task_status', 'active_seconds', 'help_requests', 'initial_response', 'initial_next_check', 'checks', 'context_revealed', 'revised_response', 'selected_cases', 'observation', 'participant_explanation', ...FEEDBACK_FIELDS, 'events_truncated'];
     const rows = s.tasks.map(task => [s.session_id, s.mode, s.participant_code, s.broad_role, s.status, task.id, task.status,
       Math.round(task.active_duration_ms / 1000), task.assistance_count, task.initial_response, task.proposed_next_step,
       task.checks.join('; '), task.context_revealed, task.revised_response, task.selected_case_ids.join('; '),
-      task.observation, task.participant_explanation, ...FEEDBACK_FIELDS.map(key => s.feedback[key])]);
+      task.observation, task.participant_explanation, ...FEEDBACK_FIELDS.map(key => s.feedback[key]), s.events_truncated]);
     return '\ufeff' + [header, ...rows].map(row => row.map(csvCell).join(',')).join('\r\n');
   }
 
@@ -283,7 +295,7 @@
     host = main;
     if (!DATA?.cases || !DATA?.tasks) { main.innerHTML = '<div class="panel"><p>Synthetic task materials are unavailable.</p></div>'; return; }
     main.innerHTML = '<section id="study-root" class="study-root"><div class="section-heading"><div><h2>Tutor practice & study</h2><p>A safe place to practise evidence review and prepare a small formative study.</p></div><span class="tag teal">SYNTHETIC CASES ONLY</span></div><p class="study-boundary">All cases, scores and outcomes here are invented. No real learner is assessed or contacted. Real user research has not yet been conducted.</p><div id="study-alert" class="study-alert' + (error ? ' is-error' : '') + '" role="status" aria-live="polite">' + esc(error || notice) + '</div>' +
-      (!session ? setupPanel() : '<div class="study-session-bar"><span><strong>' + (session.mode === 'practice' ? 'Practice — not research evidence' : 'Facilitated session · ' + esc(session.participant_code)) + '</strong><small>' + label(session.status) + ' · ' + session.tasks.filter(task => ['completed', 'skipped'].includes(task.status)).length + ' of 4 tasks closed</small></span><div>' + button('open-finish', 'Debrief / export') + button('reset', 'New session') + '</div></div><p class="study-memory-note">Your record is held in this tab only. Export before reloading or closing it. Switching to another lab page pauses an active task and keeps your notes.</p>' + (resetPending ? '<div class="study-reset" role="alert"><p>Starting again will discard this tab’s current record. Export it first if needed.</p>' + button('reset-confirm', 'Discard and start again') + button('reset-cancel', 'Keep this session') + '</div>' : '') + '<nav class="study-task-nav" aria-label="Study tasks">' + DATA.tasks.map((task, i) => button('open-task', (i + 1) + '. ' + esc(task.title), false, 'data-study-task="' + task.id + '"' + (panel === task.id ? ' aria-current="step"' : ''))).join('') + button('open-finish', '5. Debrief & export', false, panel === 'finish' ? 'aria-current="step"' : '') + '</nav>' + (panel === 'finish' ? finishPanel() : taskPanel(panel))) + '</section>';
+      (!session ? setupPanel() : '<div class="study-session-bar"><span><strong>' + (session.mode === 'practice' ? 'Practice — not research evidence' : 'Facilitated session · ' + esc(session.participant_code)) + '</strong><small>' + label(session.status) + ' · ' + session.tasks.filter(task => ['completed', 'skipped'].includes(task.status)).length + ' of 4 tasks closed</small></span><div>' + button('open-finish', 'Debrief / export') + button('reset', 'New session') + '</div></div><p class="study-memory-note">Your record is held in this tab only. Export before reloading or closing it. Switching to another lab page pauses an active task and keeps your notes.</p>' + (session.events_truncated ? '<p class="study-memory-note" role="status">The event history is limited to its first 500 entries. Current responses, task status, timing and help totals continue to be saved; the sequence of later events is not recorded.</p>' : '') + (resetPending ? '<div class="study-reset" role="alert"><p>Starting again will discard this tab’s current record. Export it first if needed.</p>' + button('reset-confirm', 'Discard and start again') + button('reset-cancel', 'Keep this session') + '</div>' : '') + '<nav class="study-task-nav" aria-label="Study tasks">' + DATA.tasks.map((task, i) => button('open-task', (i + 1) + '. ' + esc(task.title), false, 'data-study-task="' + task.id + '"' + (panel === task.id ? ' aria-current="step"' : ''))).join('') + button('open-finish', '5. Debrief & export', false, panel === 'finish' ? 'aria-current="step"' : '') + '</nav>' + (panel === 'finish' ? finishPanel() : taskPanel(panel))) + '</section>';
     const root = main.querySelector('#study-root');
     root.addEventListener('click', onClick);
     root.addEventListener('input', onInput);

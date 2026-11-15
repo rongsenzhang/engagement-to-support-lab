@@ -29,6 +29,8 @@ python src/study_summary.py --input-dir private_study/sessions --output private_
 
 The summary reads only JSON files directly in the input directory. Keep one final export per session. Separate initial sessions and retests into different directories; reusing participant codes within one round is rejected rather than double-counted. No input produces zero participants and null timing averages. Stopped sessions are included with their unfinished tasks visibly counted; paused/unfinished sessions are excluded until finalised. Practice is always excluded.
 
+Interpret active time by task status: `active_seconds_by_status` and `mean_active_seconds_by_status` separate completed, skipped and paused attempts within included sessions. The overall `active_seconds` / `mean_active_seconds` fields combine completed and skipped tasks; they describe active interface time, not time to successful task completion. Empty status groups have a null mean.
+
 The script counts facilitator-recorded data; software cannot verify that a person attended or consented. A checked box or an imported file is not independent proof of a real session. Confirm those facts in the actual study process.
 
 ## Task set and interpretation boundaries
@@ -38,6 +40,8 @@ Task set `synthetic-tutor-tasks-1` uses fictional `SYN-001`–`SYN-050` cases. T
 The 50-record capacity table is ordered by an illustrative index. It is not a probability, a validated ranking or an allocation of student support. The participant selects records for further checks; the tool never selects recipients of a real service.
 
 Task times include note entry and are approximate active-interface time. Switching tasks or leaving the trial view pauses timing. JSON export captures a paused snapshot without pausing an ongoing task; restoring a file never resumes a timer automatically. Skipped tasks remain distinct from completed tasks. Ending early is permitted.
+
+The event history retains at most its first 500 transitions/help actions. If further events occur, the page and JSON/CSV export mark `events_truncated: true`; responses, current task status, active time and help totals still update normally, and the record can still be exported and restored. The summary uses those task-level totals, so its descriptive counts remain available, and reports `sessions_with_truncated_events`. Do not reconstruct later action sequences from a truncated event history. Editing a saved response requires saving it again before completion; the context task's first saved judgment remains locked to preserve the before/after comparison.
 
 ## What remains for the real study
 

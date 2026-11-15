@@ -25,6 +25,9 @@ def read_session(path):
         raise ValueError('Invalid saved session status: ' + path.name)
     if not isinstance(session.get('session_id'), str) or not re.fullmatch(r'STUDY-[a-zA-Z0-9-]+', session['session_id']):
         raise ValueError('Invalid session identifier: ' + path.name)
+    events, truncated = session.get('events'), session.get('events_truncated')
+    if not isinstance(events, list) or len(events) > 500 or type(truncated) is not bool or (truncated and len(events) != 500):
+        raise ValueError('Invalid event history or truncation marker: ' + path.name)
     tasks = session.get('tasks')
     if not isinstance(tasks, list) or len(tasks) != 4 or any(not isinstance(task, dict) or not isinstance(task.get('id'), str) for task in tasks) or {task.get('id') for task in tasks} != set(TASKS):
         raise ValueError('Expected the four distinct study tasks: ' + path.name)
@@ -32,7 +35,7 @@ def read_session(path):
         if task.get('status') not in ('pending', 'paused', 'completed', 'skipped'):
             raise ValueError('Invalid task status: ' + path.name)
         duration, help_count = task.get('active_duration_ms'), task.get('assistance_count')
-        if type(duration) is not int or not 0 <= duration <= 86400000 or type(help_count) is not int or not 0 <= help_count <= 500:
+        if type(duration) is not int or not 0 <= duration <= 86400000 or type(help_count) is not int or not 0 <= help_count <= 2 ** 53 - 1:
             raise ValueError('Invalid timing/help count: ' + path.name)
         if task['status'] == 'completed':
             if not task.get('initial_saved_at') or not str(task.get('initial_response', '')).strip() or not str(task.get('proposed_next_step', '')).strip():
@@ -82,18 +85,24 @@ def summarise(input_dir):
         'broad_role_counts': dict(Counter(session['broad_role'] for session in included)),
         'practice_sessions_excluded': excluded_practice,
         'unfinished_sessions_excluded': excluded_open,
+        'sessions_with_truncated_events': sum(session['events_truncated'] for session in included),
         'tasks': [],
-        'interpretation': 'Descriptive counts of facilitator-recorded sessions only. No themes, user findings or design improvements are inferred automatically. Practice is never participant evidence. Small convenience samples do not establish general effectiveness.'
+        'interpretation': 'Descriptive counts of facilitator-recorded sessions only. Overall active_seconds and mean_active_seconds combine completed and skipped tasks; they are not task-completion times. Use the by-status fields to distinguish completed, skipped and paused tasks. No themes, user findings or design improvements are inferred automatically. Practice is never participant evidence. Small convenience samples do not establish general effectiveness.'
     }
     for task_id in TASKS:
         rows = [next(task for task in session['tasks'] if task['id'] == task_id) for session in included]
         durations = [task['active_duration_ms'] / 1000 for task in rows if task['status'] in {'completed', 'skipped'}]
+        by_status = {status: [task['active_duration_ms'] / 1000 for task in rows if task['status'] == status]
+                     for status in ('completed', 'skipped', 'paused')}
         result['tasks'].append({
             'task_id': task_id,
             'status_counts': dict(Counter(task['status'] for task in rows)),
             'help_requests': sum(task['assistance_count'] for task in rows),
             'active_seconds': durations,
             'mean_active_seconds': sum(durations) / len(durations) if durations else None,
+            'active_seconds_by_status': by_status,
+            'mean_active_seconds_by_status': {status: sum(values) / len(values) if values else None
+                                              for status, values in by_status.items()},
         })
     return result
 

@@ -56,6 +56,16 @@ test('practice has no participant metadata even when configuration contains it',
   assert.equal(session.adult_confirmed, false);
   assert.deepEqual(plain(core.importJSON(JSON.stringify(core.snapshot(session, NOW)))), plain(core.snapshot(session, NOW)));
 });
+test('all fifty synthetic records have consistent recent clicks, active days and recency', () => {
+  const { data } = load();
+  for (const row of data.cases) {
+    assert.ok(row.weeks.every(clicks => Number.isInteger(clicks) && clicks >= 0), row.id);
+    assert.ok(Number.isInteger(row.days_since_activity) && row.days_since_activity >= 0 && row.days_since_activity <= 6, row.id);
+    assert.ok(Number.isInteger(row.active_days_recent) && row.active_days_recent >= 1, row.id);
+    assert.ok(row.active_days_recent <= 7 - row.days_since_activity, row.id + ' active days must fit before the most recent activity');
+    assert.ok(row.active_days_recent <= row.weeks[3], row.id + ' every active day requires a click');
+  }
+});
 test('facilitated setup requires each real-session agreement field and a valid anonymous code', () => {
   const { core } = load();
   for (const change of [{ adult_confirmed: false }, { consent_confirmed: false }, { participant_code: 'Alice' }, { broad_role: 'Named department' }, { withdrawal_deadline: '' }, { withdrawal_deadline: '2026-02-30' }, { withdrawal_deadline: '2026-11-14' }]) {
@@ -93,6 +103,53 @@ test('capacity selection is manual, limited to five, and supports replacing a ch
   core.closeTask(s, 'capacity', 'completed', NOW + 4000);
   assert.deepEqual(plain(s.tasks[2].selected_case_ids), ['SYN-002', 'SYN-003', 'SYN-004', 'SYN-005', 'SYN-006']);
 });
+test('import rejects incomplete or unstarted saved judgments and valid restored context remains completable', () => {
+  const { core } = load(), s = core.makeSession({}, NOW);
+  response(core, s, 'context', NOW);
+  const saved = plain(core.snapshot(s, NOW + 1500));
+  const mutations = [
+    value => { value.tasks[1].status = 'pending'; value.tasks[1].started_at = null; },
+    value => { value.tasks[1].proposed_next_step = '  '; },
+    value => { value.tasks[1].initial_response = ''; },
+    value => { value.tasks[1].proposed_next_step = ''; value.tasks[1].context_revealed = true; }
+  ];
+  for (const mutate of mutations) {
+    const bad = plain(saved); mutate(bad);
+    assert.throws(() => core.importJSON(JSON.stringify(bad)), /saved initial response/);
+  }
+  const restored = core.importJSON(JSON.stringify(saved));
+  core.startTask(restored, 'context', NOW + 10000);
+  core.revealContext(restored, NOW + 11000);
+  core.updateTask(restored, 'context', 'revised_response', 'Check the authorised extension and offline work.');
+  core.saveRevision(restored, NOW + 12000);
+  core.closeTask(restored, 'context', 'completed', NOW + 13000);
+  assert.equal(restored.tasks[1].status, 'completed');
+  const inconsistent = core.makeSession({}, NOW);
+  core.startTask(inconsistent, 'context', NOW);
+  inconsistent.tasks[1].initial_saved_at = new Date(NOW).toISOString();
+  inconsistent.tasks[1].initial_response = 'A partial response';
+  assert.throws(() => core.revealContext(inconsistent, NOW + 1), /complete initial/);
+  assert.equal(inconsistent.tasks[1].context_revealed, false);
+});
+test('editing a saved response makes a restorable draft and requires saving the new version', () => {
+  const { core } = load(), s = core.makeSession({}, NOW);
+  response(core, s, 'patterns', NOW);
+  core.updateTask(s, 'patterns', 'proposed_next_step', '');
+  assert.equal(s.tasks[0].initial_saved_at, null);
+  assert.doesNotThrow(() => core.importJSON(JSON.stringify(core.snapshot(s, NOW + 1001))));
+  core.updateTask(s, 'patterns', 'proposed_next_step', 'Check the timetable.');
+  assert.throws(() => core.closeTask(s, 'patterns', 'completed', NOW + 1002), /Save/);
+  core.saveInitial(s, 'patterns', NOW + 1003);
+  core.closeTask(s, 'patterns', 'completed', NOW + 1004);
+  response(core, s, 'context', NOW + 2000);
+  core.revealContext(s, NOW + 4000);
+  core.updateTask(s, 'context', 'revised_response', 'The extension changes the interpretation.');
+  core.saveRevision(s, NOW + 5000);
+  core.updateTask(s, 'context', 'revised_response', '');
+  assert.equal(s.tasks[1].revision_saved_at, null);
+  assert.doesNotThrow(() => core.importJSON(JSON.stringify(core.snapshot(s, NOW + 6000))));
+  assert.throws(() => core.closeTask(s, 'context', 'completed', NOW + 7000), /revised/);
+});
 test('pausing excludes waiting time and switching tasks never runs two timers', () => {
   const { core } = load(), s = core.makeSession({}, NOW);
   core.startTask(s, 'patterns', NOW);
@@ -119,6 +176,48 @@ test('help, completion, skipping and early stop remain distinct', () => {
   assert.equal(s.status, 'stopped');
   assert.equal(s.tasks[0].status, 'skipped');
   assert.equal(s.tasks[1].status, 'pending');
+});
+test('full event history never blocks progress, task switching, pausing or export restoration', () => {
+  const { core } = load(), s = core.makeSession({}, NOW);
+  core.startTask(s, 'patterns', NOW);
+  for (let i = 0; i < 499; i++) core.requestHelp(s, 'patterns', NOW + i + 1);
+  assert.equal(s.events.length, 500);
+  assert.equal(s.events_truncated, false);
+  core.requestHelp(s, 'patterns', NOW + 500);
+  core.requestHelp(s, 'patterns', NOW + 501);
+  assert.equal(s.tasks[0].assistance_count, 501);
+  assert.equal(s.events.length, 500);
+  assert.equal(s.events_truncated, true);
+  response(core, s, 'patterns', NOW + 1000);
+  core.startTask(s, 'context', NOW + 3000);
+  assert.equal(s.tasks[0].status, 'paused');
+  core.pauseTask(s, 'context', NOW + 4000);
+  assert.equal(s.tasks[1].active_duration_ms, 1000);
+  core.startTask(s, 'patterns', NOW + 5000);
+  core.closeTask(s, 'patterns', 'completed', NOW + 6000);
+  core.endSession(s, 'stopped', NOW + 7000);
+  const exported = core.snapshot(s, NOW + 7000);
+  assert.deepEqual(plain(core.importJSON(JSON.stringify(exported))), plain(exported));
+  assert.match(core.exportCSV(s, NOW + 7000), /"events_truncated"/);
+});
+test('leaving the module with a full event history pauses safely and explains the truncated history', () => {
+  const app = load(), s = app.core.makeSession({}, NOW);
+  app.core.startTask(s, 'patterns', NOW);
+  for (let i = 0; i < 499; i++) app.core.requestHelp(s, 'patterns', NOW + i + 1);
+  app.render(app.host);
+  app.importText(JSON.stringify(app.core.snapshot(s, NOW + 500)));
+  app.click('import-text');
+  app.click('start');
+  app.click('help');
+  assert.match(app.host.innerHTML, /first 500 entries/);
+  assert.doesNotThrow(() => app.suspend());
+  const exported = app.getSession();
+  assert.equal(exported.tasks[0].status, 'paused');
+  assert.equal(exported.events_truncated, true);
+  assert.equal(exported.tasks[0].assistance_count, 500);
+  assert.doesNotThrow(() => app.core.importJSON(JSON.stringify(exported)));
+  app.render(app.host);
+  assert.match(app.host.innerHTML, /Resume task/);
 });
 test('a complete practice journey exports and restores every response without claiming participant evidence', () => {
   const { core } = load(), s = core.makeSession({}, NOW);
@@ -177,6 +276,7 @@ test('import rejects malformed, excessive, unknown and logically inconsistent re
     value => { value.mode = 'facilitated'; },
     value => { value.tasks[0].timer_started_at = NOW; },
     value => { value.tasks[0].active_duration_ms = -1; },
+    value => { value.tasks[0].assistance_count = Number.MAX_SAFE_INTEGER + 1; },
     value => { value.tasks[0].status = 'completed'; },
     value => { value.tasks[1].context_revealed = true; },
     value => { value.tasks[0].initial_response = 'x'.repeat(2001); },
@@ -185,6 +285,8 @@ test('import rejects malformed, excessive, unknown and logically inconsistent re
     value => { value.tasks[2].selected_case_ids = ['PRIVATE-STUDENT']; },
     value => { value.tasks[1] = value.tasks[0]; },
     value => { value.feedback.extra = 'unrecognised'; },
+    value => { value.events_truncated = 'true'; },
+    value => { value.events_truncated = true; },
     value => { value.events = [{ task_id: 'patterns', event: 'unexpected', at: new Date(NOW).toISOString() }]; }
   ];
   for (const mutate of mutations) { const bad = plain(s); mutate(bad); assert.throws(() => core.importJSON(JSON.stringify(bad))); }
