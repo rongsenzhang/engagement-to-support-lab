@@ -1,6 +1,12 @@
-# Front-end data contract (v1)
+# Front-end data contracts
 
-The Python pipeline writes `artifacts/demo_data.json` and `web/data.js` (assignment `window.LAB_DATA = {...};`). The offline app loads `data.js`; package.py will embed scripts for a standalone HTML deliverable. No CDN or network required. UI language English for the recruiting audience.
+The original Python pipeline writes `artifacts/demo_data.json` and `web/data.js`
+(assignment `window.LAB_DATA = {...};`). This v0.1 payload is retained unchanged.
+Later analyses use separate payloads, never silently replace its model scores.
+`package_demo.py` embeds the local scripts/styles for a standalone HTML deliverable.
+No CDN or network is required. UI language is English for the recruiting audience.
+
+## Original historical results: LAB_DATA
 
 Top-level keys:
 - `meta`: title, version, generated_at, cutoff_day=28, target, dataset, license, dataset_url, split_description, splits (train/validation/test objects with n, positives, prevalence, presentations), exclusions, limits (string list), default_model (chosen ONLY on validation), feature_groups, reproducibility.
@@ -10,4 +16,40 @@ Top-level keys:
 - `research`: list `{id,title,concept,signals,hypothesis,limitations,source_title,url,status}`. It is supplied from docs/research.json.
 - `checks`: object from automated data assertions.
 
-UI requirements: three views Support queue / Model evidence / Research & scope. Course filter (All/BBB/DDD/EEE/FFF/GGG), model selector, contact capacity number (5-50% OR count) with deterministic ranking (score descending then id ascending). Explain rule score is DAYS, NOT probability. Default hide later outcome; only show after explicit retrospective reveal. Display snapshot day28 and historical dataset 2013-14, independent application prototype not affiliated with Kortext. Show full test population/filtered counts and selected count; outcomes support retrospective metrics only. Never claim prevented withdrawals, causal impact, mental health detection or superiority to Kortext. For course-specific recalculated metrics label them as selected cohort, global model statistics remain clearly labelled. User can inspect a row, weekly trajectory, raw signals and top +/- model contributions, plus a suggested HUMAN enquiry based on observed evidence. No send/email action. Accessible responsive design, keyboard controls, no reliance only on color. Include honest data limits.
+The original queue, Model evidence and Sources & scope views remain available.
+v0.2 added Research question and its four deterministic historical examples;
+v0.3 adds Course robustness. Course/model/capacity controls use deterministic
+score-descending, alias-ascending ranking. Inactivity scores are days; R is a
+non-probability index; A/B/C are historical probability estimates. Later outcomes
+are hidden in the queue until explicitly revealed. Historical analysis pages
+necessarily use the already-observed outcomes and are labelled accordingly.
+
+Show full/filtered population sizes and actual selected counts. Distinguish module
+capacity allocation from the global list. Never claim prevented withdrawals,
+causal impact, mental-health diagnosis or superiority to a proprietary product.
+Suggested enquiries are for human consideration; no contact is sent. Keep keyboard
+controls, responsive layouts and visible limitations.
+
+## Transparent reference: LAB_REFERENCE
+
+`web/reference-data.js` carries the v0.2 R1 specification, per-record component
+arithmetic and score, capacity results and example-selection rules. It joins the
+original records by enrolment alias. Invalid/missing overlays leave the original
+application usable and show an unavailable state. R has no Brier score, probability
+calibration or learned weights. See [protocol_v0.2.md](protocol_v0.2.md).
+
+## Course robustness: LAB_ROBUSTNESS
+
+`web/robustness-data.js` contains the separately generated v0.3 report. It separates
+historical per-module comparisons, development leave-module-out results, and
+simulated input delays/missing events. The browser displays these precomputed
+results; it does not train models, upload records or claim fresh predictions.
+The current source of field definitions is `src/robustness.py` and its companion
+`web/robustness.js`; the scientific specification is [protocol_v0.3.md](protocol_v0.3.md).
+
+Every result identifies its population, denominator, class prevalence, method and
+integer review capacity. B→C measures the assessment-feature increment; A→C also
+adds trend. Undefined values remain null, not zero. Development outer predictions
+come from separate fitted models; their pooled metrics are secondary to per-module
+and macro results. Stress cases identify simulated impairments and preserve
+original versus perturbed evidence, scores and explanations.

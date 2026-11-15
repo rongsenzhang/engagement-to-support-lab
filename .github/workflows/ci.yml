@@ -2,7 +2,7 @@ name: Verify research prototype
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, 'research/**']
   workflow_call:
   workflow_dispatch:
 
@@ -47,7 +47,7 @@ jobs:
           git diff --exit-code -- artifacts web/data.js web/reference-data.js
 
       - name: Check Python syntax
-        run: python -m compileall -q src tests download_data.py run_demo.py package_demo.py build_reference.py
+        run: python -m compileall -q src tests download_data.py run_demo.py package_demo.py build_reference.py build_robustness.py
 
       - name: Set up Node for JavaScript syntax checks
         uses: actions/setup-node@v6
@@ -60,9 +60,11 @@ jobs:
           node --check web/app.js
           node --check web/data.js
           node --check web/reference-data.js
+          node --check web/robustness-data.js
+          node --check web/robustness.js
 
       - name: Check rendering and interactions in a simulated DOM
-        run: node --test tests/test_web.cjs
+        run: node --test tests/test_*.cjs
 
       - name: Verify standalone demo packaging
         run: python package_demo.py

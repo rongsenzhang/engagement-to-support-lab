@@ -3,16 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Compare day-28 activity indicators, assessment context and a transparent reference rule using historical OULAD records. Independent v0.2 research prototype.">
+  <meta name="description" content="Inspect day-28 learning indicators, within-course results, held-out courses and simulated data delays. Independent v0.3 OULAD research prototype.">
   <title>Engagement-to-Support Lab</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="robustness.css">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
     <a class="brand" href="#overview" aria-label="Engagement-to-Support Lab home">
       <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 36 36"><path d="M6 26V10M15 26V17M24 26V6"/><circle cx="30" cy="10" r="3"/></svg></span>
-      <span><strong>Engagement-to-Support</strong><span class="brand-sub">RESEARCH LAB / V0.2</span></span>
+      <span><strong>Engagement-to-Support</strong><span class="brand-sub">RESEARCH LAB / V0.3</span></span>
     </a>
     <div class="header-status"><span class="status-dot"></span>Independent research · <a href="https://github.com/rongsenzhang/engagement-to-support-lab" target="_blank" rel="noopener noreferrer">Source &amp; history ↗</a></div>
   </header>
@@ -25,7 +26,8 @@
       <a href="#overview" data-view="overview" class="active" aria-current="page"><span class="nav-number">01</span>Research question</a>
       <a href="#queue" data-view="queue"><span class="nav-number">02</span>Review queue</a>
       <a href="#evidence" data-view="evidence"><span class="nav-number">03</span>Model evidence</a>
-      <a href="#research" data-view="research"><span class="nav-number">04</span>Sources &amp; scope</a>
+      <a href="#robustness" data-view="robustness"><span class="nav-number">04</span>Course robustness</a>
+      <a href="#research" data-view="research"><span class="nav-number">05</span>Sources &amp; scope</a>
     </nav>
     <main id="main" tabindex="-1"><div class="loading-message" role="status">Loading the local research results…</div></main>
     <footer class="site-footer"><span>Built by Rongsen Zhang · Engagement-to-Support Lab</span><span>Independent prototype · Not affiliated with Kortext</span><a id="dataset-link" href="https://archive.ics.uci.edu/dataset/349/open+university+learning+analytics+dataset" target="_blank" rel="noopener noreferrer">OULAD · CC BY 4.0 ↗</a></footer>
@@ -33,6 +35,8 @@
   <div id="live-status" class="sr-only" role="status" aria-live="polite"></div>
   <script src="data.js"></script>
   <script src="reference-data.js"></script>
+  <script src="robustness-data.js"></script>
+  <script src="robustness.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

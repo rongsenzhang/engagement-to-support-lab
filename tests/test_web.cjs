@@ -45,7 +45,7 @@ function app(options = {}) {
     return nodes.get(id);
   };
   const main = getNode('main');
-  const navigation = ['overview', 'queue', 'evidence', 'research'].map(
+  const navigation = ['overview', 'queue', 'evidence', 'robustness', 'research'].map(
     view => element({ dataset: { view } })
   );
   const downloads = [], blobs = [], events = {};
