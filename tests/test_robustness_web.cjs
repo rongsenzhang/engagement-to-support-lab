@@ -149,7 +149,7 @@ test('stress resets incompatible method selection and reports real stored overla
 
 test('missing sections and unavailable metrics do not invent zeros or break other routes', async () => {
   const h = harness(null, true);
-  assert.match(h.html, /payload is missing or incompatible/);
+  assert.match(h.html, /results are missing or incompatible/);
   h.route('queue'); assert.match(h.html, /id="model-select"/);
   const data = fixture(); data.development.folds = [];
   const a = harness(data); a.section('development'); assert.match(a.html, /Analysis unavailable/);

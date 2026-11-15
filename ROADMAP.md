@@ -1,12 +1,20 @@
 # Roadmap: from public-reference baseline to a research-led demonstrator
 
-Status: v0.2 was merged and deployed on 13 November 2026 (PR #3). v0.3 course-robustness analysis is implemented and locally verified; the v0.4 system/study kit is implemented on a separate research branch. The owner confirmed on 15 November that v0.4 participants will be arranged later; software readiness will not be described as completed participant research. Optional deployment-maintenance PR #5 is not a prerequisite. This project is not a reproduction of Kortext's proprietary algorithm and has not been validated against Kortext.
+Status checked 15 November 2026: **v0.4 is merged into `main` and published on
+GitHub Pages** through [PR #10](https://github.com/rongsenzhang/engagement-to-support-lab/pull/10)
+and [successful deployment](https://github.com/rongsenzhang/engagement-to-support-lab/actions/runs/43769188941).
+v0.3 analysis was published through PR #8; v0.4 adds the working synthetic tutor
+workflow and complete study kit. The owner will arrange actual volunteers later,
+so participant research and findings remain pending. Optional maintenance PR #5
+is not a prerequisite and is not deployed. The only tagged GitHub release remains
+v0.1.0; the website version and release-download archive are separate. This is
+an independent project, not a reproduction or validation of Kortext's model.
 
 ## What the recruitment brief actually asks
 
 The advertised duties distinguish **diagnostic and competitor analysis of Stream 1.0** from **design and development of a research-led Stream 2.0 framework**. They do not ask the associate to invent Stream 1.0 from scratch. The project terminology must also be distinguished from public product release numbers: Kortext announced **stream 5.1 on 19 August 2026**. Our repository versions v0.1, v0.2 and so on refer only to this independent application project.
 
-The present prototype already demonstrates part of the research-to-model pipeline: a literature-informed question, point-in-time features, controlled feature comparisons, validation, and a tutor-facing explanation. It does not yet provide a systematic diagnosis of the existing product or a validated proposal for a new company framework.
+The present prototype already demonstrates part of the research-to-model pipeline: a literature-informed question, point-in-time features, controlled feature comparisons, validation, and a tutor-facing explanation. It includes a source-linked public-product diagnosis and a future adoption proposal; it does not establish proprietary-system parity or a company-validated framework.
 
 ## Public-reference reproduction: scope and boundary
 
@@ -44,6 +52,10 @@ Acceptance:
 
 ### v0.3 — test contextual value and robustness
 
+**Completed and published.** [PR #8](https://github.com/rongsenzhang/engagement-to-support-lab/pull/8)
+merged on 15 November 2026 and Pages deployment succeeded. The
+[generated findings](docs/results_v0.3.md) retain improvements and negative results.
+
 Primary question: **Does assessment context add useful information within courses and across held-out courses, or does the pooled improvement mainly reflect differences between courses?**
 
 The [v0.3 protocol](docs/protocol_v0.3.md) was committed before new evaluation at
@@ -75,7 +87,7 @@ Acceptance:
 
 Purpose: test whether the explanation helps a tutor understand evidence, recognize uncertainty and choose an appropriate next check.
 
-**Software/material milestone ready; human-study milestone pending.** The
+**Software/material milestone completed and published; human-study milestone pending.** The
 [working kit](docs/study/README.md) supplies the four synthetic tasks, consent
 setup, response/revision recording, manual capacity selection, local export and
 private summary. The owner will arrange participants later. Study acceptance
@@ -114,7 +126,7 @@ The most convincing applicant evidence is a traceable chain: public business evi
 
 ## GitHub operating model
 
-Use GitHub as the canonical home for source, protocols, aggregate/public artifacts, decisions, issues, pull requests, tests and versioned releases. Use tagged releases for stable demonstrations and feature branches for experiments. A pull request should link the question, summarize the final behavior, show actual validation and state material limitations.
+Use GitHub as the canonical home for source, protocols, aggregate/public artifacts, decisions, issues, pull requests, tests and versioned releases. Delivery PRs target `main` by default. The implementer resolves any branch dependency and verifies the final target before handing the PR over for merge; reviewers should not need to repair a stacked-branch publication path. Use tagged releases for stable demonstrations and feature branches for experiments. A pull request should link the question, summarize the final behavior, show actual validation and state material limitations.
 
 Use ordinary revert commits to undo accepted changes without rewriting shared history. Redeploy the reverted main branch through the same workflow. Record which code revision, configuration, data checksum and generated metrics belong to each experiment. Large raw datasets can remain externally hosted with licensed download instructions and checksums; confidential participant or institutional data must not be uploaded to a public repository.
 

@@ -1,164 +1,232 @@
-# Engagement-to-Support Lab — v0.4 research and tutor-practice preview
+# Engagement-to-Support Lab — v0.4
 
-[Live demo](https://rongsenzhang.github.io/engagement-to-support-lab/) · [Releases](https://github.com/rongsenzhang/engagement-to-support-lab/releases) · [Research roadmap](ROADMAP.md) · [Working practices and rollback](CONTRIBUTING.md) · [Change history](CHANGELOG.md)
+[Open the live demo](https://rongsenzhang.github.io/engagement-to-support-lab/) · [中文使用说明](docs/project_guide_zh.md) · [Study kit](docs/study/README.md) · [Research roadmap](ROADMAP.md) · [Change history](CHANGELOG.md)
 
-The initial experiment is preserved as **v0.1.0**. v0.2 adds a source-linked product diagnosis, a transparent reference index and inspectable comparisons without replacing any v0.1 predictions. The roadmap separates public product evidence, independently chosen baselines and proposed research; it is not a claim to reproduce Kortext's proprietary system. The live URL follows deployed `main`; a local or feature-branch preview is not automatically the published version.
+A research demonstrator for inspecting learning indicators, comparing review
+lists, testing course differences and practising careful tutor interpretation.
+The current application combines historical OULAD analysis with a separate
+synthetic tutor-practice workflow.
 
-**v0.3 adds Course robustness:** per-module comparisons, a training-only course
-prior, development leave-module-out experiments and simulated data delays. B→C
-isolates the assessment-feature increment; A→C also adds trend. The original queue
-and scores remain available. See the [fixed protocol](docs/protocol_v0.3.md),
-[results and decisions](docs/results_v0.3.md), and [verification](docs/verification_v0.3.md).
+**Published application: v0.4.** It reached `main` through [PR #10](https://github.com/rongsenzhang/engagement-to-support-lab/pull/10)
+on 15 November 2026, and its [Pages deployment succeeded](https://github.com/rongsenzhang/engagement-to-support-lab/actions/runs/43769188941).
+The system and study materials are ready. Actual volunteers, observations and
+participant findings are still pending, as agreed with the project owner.
 
-**v0.4 adds Tutor practice:** 50 fictional records, four structured tasks,
-initial/revised interpretations, a manual five-record review list, local session
-export/restore and a complete facilitator kit. **System and materials ready;
-participants and real findings pending.** Start with Practice, which is excluded
-from study summaries. See the [study kit](docs/study/README.md),
-[Chinese project guide](docs/project_guide_zh.md) and [verification](docs/verification_v0.4.md).
+Developed for Rongsen Zhang with AI assistance as an independent project aligned
+with the University of Stirling–Kortext KTP research objectives. It is not a
+Kortext product, a Stream integration or a reproduction of its proprietary model.
 
-An independent application project for Rongsen Zhang, developed with AI assistance. It explores the research-to-indicator and validation work described in the University of Stirling–Kortext KTP vacancy FAC02157. It is not a Kortext product or an integration with Stream, and does not implement the company's proprietary algorithm.
+## What you can do now
 
-## Open the working demo
+| View | Purpose |
+|---|---|
+| Research question | Compare the historical activity model, contextual model and transparent reference rule at the same review workload; inspect successes and failures. |
+| Review queue | Filter by module, model and capacity; inspect activity, assessment evidence and model explanations; export a review list. Later outcomes are hidden until explicitly revealed. |
+| Model evidence | Compare ranking, probability error, calibration and capacity trade-offs, with evaluation boundaries and aggregate error checks. |
+| Course robustness | Inspect within-course results, held-out courses, a course-prior baseline, a controlled nonlinear comparator and simulated late/missing records. |
+| Tutor practice | Work through four tasks using 50 fictional cases; save initial and revised judgements, select five records, pause tasks and export/restore a session. |
+| Sources & scope | Read the research rationale, public product diagnosis, data attribution and limits on interpretation. |
 
-**Website:** https://rongsenzhang.github.io/engagement-to-support-lab/  
-**Source repository:** https://github.com/rongsenzhang/engagement-to-support-lab
+The browser uses precomputed research results and explicitly invented study
+cases. It does not train models, score uploaded student data, send messages or
+connect to institutional systems. A study export can be restored locally; there
+is no server upload or external AI call.
 
-The v0.4 preview was checked in a real browser at desktop (1280 × 720) and mobile (390 × 844) viewport sizes on 15 November 2026; see [verification and screenshots](docs/verification_v0.4.md). This is responsive browser testing, not a physical-phone or screen-reader audit. Initial loading downloads the historical demonstration results; no login or API key is needed. Deployment instructions are in `docs/deployment.md`.
+## Open or run the app
 
-Open `web/index.html` directly in a modern browser. No installation, internet connection or API key is needed to explore the included real, precomputed results. Alternatively, run `python3 run_demo.py` and visit the printed local address. `python package_demo.py` creates the self-contained `dist/Engagement_Lab_v0.4.html` and source ZIP. All analyses shown in the browser are already generated; running a new experiment is optional.
+Use the [live demo](https://rongsenzhang.github.io/engagement-to-support-lab/)
+without installation, login or an API key. To run a local checkout:
 
-The app opens with the research question, equal-workload results and four deterministic cases, including failures. The other views include Review queue, Model evidence, Course robustness, Tutor practice and Sources & scope. Choose a module, model and review capacity; inspect a record and its observations. R's calculation is exposed component by component. Historical outcomes are visible in the research overview, and hidden in the support queue until explicitly revealed. Filters recalculate the selected cohort's ranking metrics; global results are labelled separately.
+```sh
+python3 run_demo.py
+```
 
-The browser explores precomputed predictions and the separately generated R1 index. It does not train a model or score uploaded data. The trial can read a locally chosen session export for restoration. There is no server upload, messaging, live institutional integration or external AI call.
+The command opens the local page. You can also open `web/index.html` directly.
+Existing analysis is included; downloading raw OULAD data or retraining is not
+required to use the app.
 
-## What v0.2 establishes
+```sh
+python3 package_demo.py
+```
 
-The [official KTP brief](https://iuk-ktp.org.uk/job/ktp-associate-data-scientist-engagement-analytics/) calls for product diagnosis, research-led indicators, modelling, validation and stakeholder alignment. Our [product comparison](docs/product_comparison.md) and [company research](docs/company_research_v0.2.md) distinguish public capabilities, implementation boundaries and hypotheses. Kortext already describes context, interventions and institutional analytics; these are not inventions claimed by this project.
+This creates `dist/Engagement_Lab_v0.4.html` and
+`dist/Engagement_Lab_v0.4_Source.zip`. The HTML includes the application assets
+for offline use. A downloaded file is a fixed copy and does not update itself.
 
-R1 is `100 × mean(days_since_last/28, 1-active_days_28/28, overdue_fraction when an assessment was due)`. It uses fixed equal weights and no fitting. With no assessment due, the two activity components are averaged. It is a review index, **not a probability or Kortext's formula**. Missing required values stop generation.
+**GitHub Releases is a separate archive:** it currently contains the historical
+[v0.1.0 release](https://github.com/rongsenzhang/engagement-to-support-lab/releases/tag/v0.1.0),
+not a v0.4 release download. Use the live demo or build the current checkout for
+v0.4. Publishing the website does not automatically create a release tag or ZIP.
 
-On the same 6,362 historical enrolments and 637-record review lists:
+## What the completed analysis found
 
-| Method | Later withdrawals in list | Precision | Recall | Average precision | ROC-AUC |
-|---|---:|---:|---:|---:|---:|
-| A · activity | 121 | 19.00% | 12.53% | 0.17758 | 0.57138 |
-| C · activity + trend + assessment | 162 | 25.43% | 16.77% | 0.20797 | 0.57505 |
-| R · transparent reference | 157 | 24.65% | 16.25% | 0.19213 | 0.58340 |
+The latest analysis asks whether assessment context helps within and across
+courses, and how delayed records affect a review list.
 
-C has higher AP and more later withdrawals in this fixed-size list than R; R has higher ROC-AUC. There is no universal winner or demonstrated significance for C versus R. C's list still misses 804 of 966 later withdrawals. These counts are **not students saved**. The 2014J outcomes were already inspected in v0.1, so new comparisons are exploratory. Full results, including inactivity and B, are in [results_v0.2.md](docs/results_v0.2.md).
+- Adding assessment features to activity and trend (B → C) improves ranking in
+  BBB, DDD and FFF, but worsens it in EEE and GGG. Pooled improvement is not proof
+  of a benefit in every course. EEE/GGG have no eligible assessment due by day 28.
+- Five development leave-course-out experiments keep students apart and separate
+  fitting, selection and calibration. The nonlinear comparator has higher mean
+  average precision than C (0.21459 versus 0.20233), but worse mean Brier error
+  (0.13186 versus 0.12999), and does not win every course.
+- Withholding 60 recent submission records replaces 54 positions in C's
+  637-record list. A score change caused by a delayed record does not establish
+  a change in learning. These are simulations, not measured feed reliability.
+- C remains the original queue default. Negative findings and metric trade-offs
+  are retained; no new result automatically replaces the chosen model.
 
-## The research question
+See the [full findings](docs/results_v0.3.md),
+[fixed comparison protocol](docs/protocol_v0.3.md) and
+[analysis verification](docs/verification_v0.3.md). B → C isolates added
+assessment context; A → C adds both trend and assessment.
 
-At day28, do personal activity changes and assessment-deadline context add useful predictive information beyond aggregate VLE activity for later module withdrawal? A, B and C use the same logistic-regression family; the changed feature sets can therefore be compared transparently. An inactivity rule is a separate comparator.
+These are exploratory historical OULAD results. The outcome is later withdrawal
+from one module, not leaving university or a measured need for support. They do
+not establish prevented withdrawals, current institutional accuracy or superiority
+to a commercial system.
 
-See `docs/protocol.md` for the prespecified population, features, split, model-selection rule, metrics and limitations. The source is the openly licensed OULAD dataset, not the applicant's students or Kortext customer records.
+## Use the tutor-practice and study kit
 
-## Reproduce v0.2 from the frozen experiment
+Start with **Tutor practice → Practice**. The four tasks cover activity patterns,
+an apparently missing submission followed by hypothetical context, manual
+selection of five from fifty cases, and an illustrative prediction error.
+All cases, scores and outcomes in these tasks are invented.
 
-Tested with Python3.9.6 on macOS arm64. The pinned scientific dependencies support Python3.9–3.12. Create a fresh environment rather than using a global environment.
+Save the initial judgement before revealing context; record revisions separately.
+Switching lab views pauses timing and retains notes. **Export JSON before
+reloading or closing the tab.** JSON preserves the complete record for restoration;
+CSV supports manual analysis. Practice is always excluded from participant counts.
 
-```bash
+For actual consenting adult volunteers, follow the
+[participant information](docs/study/participant_information.md) and
+[Chinese facilitator guide](docs/study/facilitator_guide.md). The kit also includes
+an [observation template](docs/study/observation_template.csv),
+[analysis template](docs/study/analysis_template.md) and
+[future adoption proposal](docs/study/adoption_proposal.md).
+Keep actual session records in ignored `private_study/sessions/`, outside `web/`
+and public PRs. To generate descriptive counts locally:
+
+```sh
+python3 src/study_summary.py --input-dir private_study/sessions --output private_study/summary.json
+```
+
+An empty directory reports zero participants. Practice and unfinished sessions
+are excluded; final stopped sessions are distinguished from completed ones.
+The tool does not infer themes, verify attendance or create participant findings.
+Recruitment, actual sessions, synthesis and feedback-driven design changes remain
+future work. See the [study plan](docs/user_study_plan.md).
+
+## Verification and continuing development
+
+The v0.4 implementation passed **58 Python tests and 39 JavaScript tests**, plus
+syntax and packaging checks. Actual browser checks covered all four practice
+tasks, downloads, restoration, pause/return behaviour and desktop/mobile widths.
+See [verification and screenshots](docs/verification_v0.4.md). These checks do not
+constitute a completed user study or certified accessibility audit.
+
+For development, create a project environment with the pinned dependencies.
+The analysis was tested locally with Python 3.9.6; CI uses Python 3.11 and Node 24.
+The scientific requirements support Python 3.9–3.12. The browser itself does not
+need Node or those dependencies.
+
+```sh
 git clone https://github.com/rongsenzhang/engagement-to-support-lab.git
 cd engagement-to-support-lab
-# Check out the branch or release you intend to reproduce.
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
-python build_reference.py
-python -m pytest -q
-node --test tests/test_*.cjs
-python package_demo.py
-```
-
-Rebuilding R requires a **Git checkout with history** so the separately committed protocol can be verified. If you used a shallow clone, fetch the full history first. A downloaded source ZIP can run the webpage and tests, but has no Git provenance for the rebuild command. Node 24 is used by CI; the browser has no Node dependency.
-
-No raw-data download or retraining is needed for v0.2. The generator verifies the ten frozen v0.1 files, writes only `artifacts/v0.2/` and `web/reference-data.js`, and records protocol/code/input/output hashes in a manifest. Repeating it with unchanged inputs reproduces the outputs. CI checks tests, regeneration, JavaScript syntax, simulated-DOM interactions and standalone packaging. Simulated-DOM checks do not establish browser layout or accessibility conformance.
-
-To reproduce the original model experiment, use a **separate checkout of `v0.1.0`** and follow that release's README (`download_data.py`, then `src/pipeline.py`). The raw archive transfers about 45 MB and extracts to about 450 MB. Re-running v0.1 in the v0.2 working tree changes frozen artifacts and is intentionally rejected by the R builder. The original archive checksum is in `artifacts/metrics.json`. Only load trusted joblib files; that serialization can execute code.
-
-## Reproduce v0.3
-
-The v0.3 generator uses the original saved feature tables and trusted original
-models, plus raw event timestamps and student grouping. With the environment above:
-
-```sh
-# Only needed if the original OULAD CSV files are not already available locally.
-python download_data.py
-python build_robustness.py --raw-dir data/raw
 python -m pytest -q tests
 node --test tests/test_*.cjs
 python package_demo.py
 ```
 
-An existing data directory can be supplied through `--raw-dir`; it is read, not
-modified. Outputs go to `artifacts/v0.3/` and `web/robustness-data.js`. The generator
-does not rerun or overwrite the v0.1 experiment. The full experiment is separate
-from the quick software tests, which can use committed results and small fixtures.
-The 2014J comparison is retrospective/exploratory; only development blocks choose
-the nonlinear comparator. Grouped fitting, selection, calibration and evaluation
-are kept apart, and no outer/test result chooses the displayed default model.
+New delivery PRs should target `main`. If work depends on another branch, the
+implementer resolves that dependency and verifies the target before requesting
+merge. Preserve separate protocol commits with **Create a merge commit** and use
+normal revert PRs for rollback. See [working practices](CONTRIBUTING.md) and the
+[Chinese guide](docs/project_guide_zh.md). Optional maintenance PR #5 is not part
+of the current app; automatic new-version refresh notices are not yet deployed.
 
-## Use the v0.4 study kit
+## Earlier versions and research provenance
 
-Open **Tutor practice** and begin Practice. Work through patterns, missing
-submission context, five of fifty records, and an illustrative prediction error.
-Save the initial judgement before revealing context; record revisions separately.
-Switching lab views pauses the timer and retains notes, while reloading loses
-unsaved state. Preview and download JSON to retain or restore a session; CSV
-supports manual analysis.
+**The application version and the origin of an experiment are different.**
+v0.4 includes earlier measured results as well as the newer analyses and study
+workflow. A reference to v0.1 or v0.2 in a protocol or results file identifies when
+that evidence was produced; it does not mean the running application is old.
+The original results are not relabelled as newly generated v0.4 experiments.
 
-Facilitated mode is for actual consenting adult volunteers only. Use the
-[participant information](docs/study/participant_information.md) and
-[Chinese facilitator guide](docs/study/facilitator_guide.md). Keep actual records
-in ignored `private_study/sessions/`, never in `web/` or a public PR. Then run:
+| Stage | Evidence retained in the current app |
+|---|---|
+| v0.1 | Original day-28 features, inactivity rule, logistic A/B/C comparison, calibration, capacity and subgroup checks. [Original findings](docs/results.md) |
+| v0.2 | Public product diagnosis, transparent R1 reference rule and deterministic failure cases. [Reference findings](docs/results_v0.2.md) |
+| v0.3 | Per-course and held-out-course comparisons, nonlinear comparator and data-availability stress analysis. [Course findings](docs/results_v0.3.md) |
+| v0.4 | Synthetic tutor workflow and study materials; actual participant research pending. [Study kit](docs/study/README.md) |
+
+The historical comparison uses 6,362 enrolments and 637-record review lists.
+A includes 121 later module withdrawals, C 162 and R 157. These are prediction
+counts, not students saved. R has higher ROC AUC than C, while C has higher AP and
+top-list precision; neither result establishes a universal winner.
+
+R1 is `100 × mean(days_since_last/28, 1-active_days_28/28,
+overdue_fraction when an assessment was due)`. With no assessment due, it averages
+only the two activity components. The fixed equal weights are an independent
+modelling choice; R is not a probability or Kortext's formula. See its
+[protocol](docs/protocol_v0.2.md) and the
+[source-linked product comparison](docs/product_comparison.md).
+
+### Optional: reproduce the retained analyses
+
+To rebuild the reference overlay from committed outputs:
 
 ```sh
-python src/study_summary.py --input-dir private_study/sessions --output private_study/summary.json
+python build_reference.py
 ```
 
-An empty directory produces zero participants. Practice and unfinished sessions
-are excluded; final stopped sessions are distinguished from completed sessions.
-The script reports descriptive counts only, not automatically generated themes
-or proof that a real participant attended. Complete the analysis template from
-actual observations after the agreed withdrawal deadline.
+This requires a Git checkout with full history to resolve the original protocol
+commit. A source ZIP can run the app and tests but lacks that history. The builder
+writes `artifacts/v0.2/` and `web/reference-data.js`; no raw download or retraining
+is needed. CI checks the preserved outputs and reference regeneration.
 
-## What was implemented
+To reproduce course robustness with the scientific environment above:
 
-- Day28 eligibility and point-in-time features, with future events excluded.
-- Three feature ablations with training-only scaling and validation-only probability calibration.
-- Historical cohort split with no student crossing train, validation and test.
-- Held-out precision/recall at fixed workloads, average precision, ROC-AUC, Brier score, calibration bins and paired bootstrap comparison.
-- Aggregate subgroup error checks, with demographic fields excluded from individual browser records and model predictors.
-- Interactive review queue, individual trajectories, additive model explanations and six sourced research cards.
-- Automated tests of data boundaries, eligibility, ranking, exports and evaluation arithmetic.
+```sh
+# Only needed if the seven original OULAD CSVs are not already available locally.
+python download_data.py
+python build_robustness.py --raw-dir data/raw
+```
 
-## What has not been demonstrated
+An existing directory can be supplied through `--raw-dir`; it is read, not
+modified. Outputs go to `artifacts/v0.3/` and `web/robustness-data.js`. The original
+experiment is not overwritten. Only development blocks choose the nonlinear
+comparator; the already inspected 2014J comparison remains exploratory.
 
-This is historical, single-institution, distance-learning evidence. The outcome is withdrawal from a module, not leaving university. No contemporary client validation, intervention effect, teacher interviews, live feed-quality monitoring or production deployment has been performed. Activity is an observed proxy, not a diagnosis of motivation, belonging or mental health. Model contributions are associations, not causal explanations. Data missing from a trace is not evidence that no learning occurred.
+To reproduce the initial model fitting, use a **separate checkout of `v0.1.0`**
+and follow its README (`download_data.py`, then `src/pipeline.py`). The original
+archive is about 45 MB and extracts to about 450 MB. Rerunning that pipeline in
+the current checkout changes preserved artifacts and is rejected by the reference
+builder. Load only the repository's trusted model files; joblib can execute code.
 
-## Files and evidence
+## Supporting documents
 
-- `docs/results.md`: actual experimental findings and cautions.
-- `docs/results_v0.2.md`: reference comparison, metric trade-offs and next decision.
-- `docs/protocol_v0.2.md`: separately committed R1 specification, population and case rules.
-- `docs/protocol_v0.3.md`: course-robustness experiment fixed before evaluation.
-- `docs/results_v0.3.md`: actual per-course, held-out-course and stress findings.
-- `artifacts/v0.3/` and `web/robustness-data.js`: generated reports and the separate analysis payload.
-- `docs/product_comparison.md` and `docs/company_research_v0.2.md`: sourced product diagnosis.
-- `artifacts/v0.2/manifest.json`: frozen baseline, protocol, input and output provenance.
-- `docs/research_notes.md` and `docs/research.json`: literature, feature hypotheses and limits.
-- `docs/criteria_evidence.md`: criteria mapping, including existing credentials and work still planned.
-- `docs/independent_review.md`: independent methodology review.
-- `docs/demo_script_v0.4.md`: current five-minute walkthrough; `docs/demo_script.md` preserves the original narrative.
-- `docs/decision_log.md`: actual scope and implementation choices.
-- `docs/user_study_plan.md`: proposed teacher feedback study, not conducted research.
-- `docs/study/`: ready-to-use participant information, facilitator script, observation and analysis templates, and adoption proposal.
-- `src/study_summary.py`: local summary of final, de-identified session exports.
-- `tests/test_pipeline.py`, `tests/test_reference.py`, `tests/test_web.cjs`: executable verification, including explicitly simulated browser interactions.
+- [Current five-minute demonstration](docs/demo_script_v0.4.md)
+- [Research and feature rationale](docs/research_notes.md)
+- [Implementation decisions](docs/decision_log.md)
+- [Application criteria and evidence boundaries](docs/criteria_evidence.md)
+- [Independent methodology review](docs/independent_review.md)
+- [Company and competitor source register](docs/company_research_v0.2.md)
 
 ## Data attribution and software
 
-Kuzilek, J., Hlosta, M. and Zdrahal, Z. (2017). Open University Learning Analytics dataset. *Scientific Data*,4,170171. https://doi.org/10.1038/sdata.2017.171 . Dataset distribution: https://archive.ics.uci.edu/dataset/349/open+university+learning+analytics+dataset . Dataset licence: CC BY4.0 https://creativecommons.org/licenses/by/4.0/ . Derived displays and tables select five modules, exclude ineligible/repeated records, aggregate early behaviour and add independently computed model predictions. They are not original published OULAD prediction results.
+Kuzilek, J., Hlosta, M. and Zdrahal, Z. (2017). Open University Learning Analytics
+dataset. *Scientific Data*, 4, 170171. [Paper](https://doi.org/10.1038/sdata.2017.171) ·
+[Dataset](https://archive.ics.uci.edu/dataset/349/open+university+learning+analytics+dataset) ·
+[CC BY 4.0 licence](https://creativecommons.org/licenses/by/4.0/).
+Derived displays select five modules, apply eligibility/split rules, aggregate
+early behaviour and add independently computed predictions. They are not original
+published OULAD prediction results. Synthetic study cases are invented separately.
 
-The Python/HTML/CSS/JavaScript source in this project is provided under the MIT licence in `LICENSE`. Dataset and derived-data attribution remain governed by CC BY4.0. Third-party libraries retain their own licences. No Kortext logo or proprietary assets are used.
+Source code is provided under the [MIT licence](LICENSE). Dataset attribution
+remains governed by CC BY 4.0; third-party libraries retain their licences. No
+Kortext logo or proprietary assets are used. There is no live institutional
+integration, causal support-effect claim or completed participant study.
