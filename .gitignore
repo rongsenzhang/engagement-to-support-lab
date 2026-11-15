@@ -5,3 +5,4 @@ __pycache__/
 *.log
 dist/
 .DS_Store
+private_study/

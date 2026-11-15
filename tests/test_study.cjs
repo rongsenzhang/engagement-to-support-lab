@@ -47,6 +47,34 @@ test('the study uses fifty unique invented cases and a genuinely equal-total pat
   assert.notDeepEqual(plain(data.cases[0].weeks), plain(data.cases[1].weeks));
   assert.match(data.provenance, /not measured model results/);
 });
+test('weekly charts share a scale across cases within a task', () => {
+  const app = load();
+  const charts = () => [...app.host.innerHTML.matchAll(/<article class="study-case">([\s\S]*?)<\/article>/g)]
+    .map(card => [...card[1].matchAll(/class="study-week-bar" style="height:(\d+)px"><\/span><strong>(\d+)<\/strong>/g)]
+      .map(bar => ({ height: Number(bar[1]), clicks: Number(bar[2]) })));
+  app.render(app.host);
+  app.click('begin');
+  assert.match(app.host.innerHTML, /Weekly clicks use the same scale within this task\./);
+  let [learnerA, learnerB] = charts();
+  assert.equal(learnerA.length, 4);
+  assert.equal(learnerB.length, 4);
+  assert.equal(learnerA[0].clicks, 50);
+  assert.equal(learnerB[0].clicks, 110);
+  assert.ok(learnerA[0].height < learnerB[0].height, '50 clicks must be shorter than 110 clicks across cases');
+  const fullHeight = learnerB[0].height;
+
+  // Give the second case a shared count while retaining different case maxima.
+  app.data.cases[1].weeks = [110, 50, 35, 5];
+  app.render(app.host);
+  [learnerA, learnerB] = charts();
+  assert.equal(learnerA[0].clicks, learnerB[1].clicks);
+  assert.equal(learnerA[0].height, learnerB[1].height, 'equal counts must have equal heights across cases');
+
+  app.click('open-task', { studyTask: 'context' });
+  const [singleCase] = charts();
+  assert.equal(charts().length, 1);
+  assert.equal(Math.max(...singleCase.map(bar => bar.height)), fullHeight, 'a single case keeps its own full-height maximum');
+});
 test('practice has no participant metadata even when configuration contains it', () => {
   const { core } = load();
   const session = core.makeSession({ ...config, mode: 'practice' }, NOW);

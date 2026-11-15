@@ -1,6 +1,6 @@
 # Roadmap: from public-reference baseline to a research-led demonstrator
 
-Status: v0.2 was merged and deployed on 13 November 2026 (PR #3). v0.3 course-robustness analysis is implemented and locally verified; the v0.4 system/study kit is being integrated on a separate research branch. The owner confirmed on 15 November that v0.4 participants will be arranged later; software readiness will not be described as completed participant research. Optional deployment-maintenance PR #5 is not a prerequisite. This project is not a reproduction of Kortext's proprietary algorithm and has not been validated against Kortext.
+Status: v0.2 was merged and deployed on 13 November 2026 (PR #3). v0.3 course-robustness analysis is implemented and locally verified; the v0.4 system/study kit is implemented on a separate research branch. The owner confirmed on 15 November that v0.4 participants will be arranged later; software readiness will not be described as completed participant research. Optional deployment-maintenance PR #5 is not a prerequisite. This project is not a reproduction of Kortext's proprietary algorithm and has not been validated against Kortext.
 
 ## What the recruitment brief actually asks
 
@@ -74,6 +74,13 @@ Acceptance:
 ### v0.4 — user understanding and research-to-product evidence
 
 Purpose: test whether the explanation helps a tutor understand evidence, recognize uncertainty and choose an appropriate next check.
+
+**Software/material milestone ready; human-study milestone pending.** The
+[working kit](docs/study/README.md) supplies the four synthetic tasks, consent
+setup, response/revision recording, manual capacity selection, local export and
+private summary. The owner will arrange participants later. Study acceptance
+criteria requiring observations or evidence-driven changes remain pending;
+automated tests are not a substitute.
 
 Deliverables:
 - Prepare the synthetic tasks already outlined in `docs/user_study_plan.md`.

@@ -1,5 +1,7 @@
 # Three-minute recruiting demonstration
 
+For the current v0.4 walkthrough, use [the updated five-minute script](demo_script_v0.4.md).
+
 This preserves the **v0.1 demonstration narrative**. In v0.2 the app opens with
 Research question: begin there, inspect the A/C/R comparison and one failure
 case, then use the queue and evidence views below. Add the R metric trade-off and

@@ -41,6 +41,22 @@ These artifacts support the application, but are not evidence of completed stake
 3. **Brief demonstration.** Explain one case in tutor language, then show the technical evidence. A recording is a deliverable only if it has actually been made.
 4. **Application narrative and this mapping.** Use the CV and genuine collaboration examples for qualifications, interpersonal skills, continuous learning and project management.
 
+## v0.3 / v0.4 additions — 15 November 2026
+
+- Algorithm/analysis evidence: executed per-course comparisons, training-only
+  course prior, student-disjoint leave-course-out selection/calibration and
+  simulated delayed-feed analysis. See [v0.3 findings](results_v0.3.md), including
+  courses where added context harms ranking and the nonlinear metric trade-off.
+- Communication/research preparation: four synthetic tutor tasks, preserved
+  initial/revised judgements, manual capacity selection, local exports and the
+  [facilitator kit](study/README.md). These are delivered software and materials;
+  actual qualitative findings and feedback-driven revisions are still pending.
+- Management evidence: separate protocol, implementation and review corrections,
+  two feature PR stages, executed software/browser checks and retained rollback
+  history. Maintenance PR #5 is optional, not a prerequisite for the milestones.
+- Current demonstration: [five-minute script](demo_script_v0.4.md). No recording,
+  customer adoption or participant study is implied by a prepared script.
+
 ## Verification before making application claims
 
 - Check that the packaged app opens and its interactions match the generated data.
