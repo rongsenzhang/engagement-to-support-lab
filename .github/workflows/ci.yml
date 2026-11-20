@@ -68,5 +68,8 @@ jobs:
       - name: Check rendering and interactions in a simulated DOM
         run: node --test tests/test_*.cjs
 
+      - name: Build hosted chat assets
+        run: python build_cloud.py
+
       - name: Verify standalone demo packaging
         run: python package_demo.py

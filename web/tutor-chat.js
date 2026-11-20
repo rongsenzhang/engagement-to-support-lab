@@ -1,7 +1,8 @@
 (function () {
   'use strict';
 
-  const endpoint = '/api/tutor-chat';
+  const apiPath = '/api/tutor-chat';
+  const pagesPath = '/engagement-to-support-lab/';
   const prompts = [
     'Which observations contribute to this score?',
     'What should I check before contacting this learner?'
@@ -12,6 +13,29 @@
     const {protocol, hostname} = window.location;
     return ['http:', 'https:'].includes(protocol) &&
       ['127.0.0.1', 'localhost', '[::1]'].includes(hostname);
+  }
+
+  function isWorkerOrigin(url) {
+    return url.protocol === 'https:' && url.hostname.endsWith('.workers.dev') && !url.port;
+  }
+
+  function isProjectPage(url) {
+    return url.origin === 'https://rongsenzhang.github.io' &&
+      [pagesPath, pagesPath + 'index.html', pagesPath.slice(0, -1)].includes(url.pathname);
+  }
+
+  async function resolveService(signal) {
+    if (!isProjectPage(window.location)) return {endpoint: apiPath, mode: 'same-origin'};
+    const config = await fetch(pagesPath + 'tutor-chat-config.json', {
+      signal, mode: 'same-origin', credentials: 'omit', redirect: 'error', cache: 'no-store'
+    });
+    if (!config.ok) throw new Error('Chat is currently unavailable on this site.');
+    const {origin} = await config.json();
+    const url = new URL(origin);
+    if (!isWorkerOrigin(url) || ![url.origin, url.origin + '/'].includes(origin)) {
+      throw new Error('Chat is currently unavailable on this site.');
+    }
+    return {endpoint: url.origin + apiPath, mode: 'cors'};
   }
 
   async function readReply(response, showDelta) {
@@ -63,6 +87,7 @@
       <div class="tutor-chat-body">
         <p class="tutor-chat-scope"></p>
         <p class="tutor-chat-notice" role="status"></p>
+        <button type="button" class="quiet-button" data-reconnect hidden>Retry connection</button>
         <form hidden>
           <p>Sending a question shares this record’s day-28 evidence and your conversation with OpenAI. Use demo details only. Check answers against the record below.</p>
           <div class="tutor-chat-examples" role="group" aria-label="Suggested questions"></div>
@@ -79,6 +104,7 @@
     const find = selector => panel.querySelector(selector);
     const notice = find('.tutor-chat-notice');
     const form = find('form');
+    const reconnect = find('[data-reconnect]');
     const question = find('textarea');
     const stop = find('[data-stop]');
     const send = find('[type="submit"]');
@@ -88,6 +114,7 @@
     const lifetime = new AbortController();
     const history = [];
     let active = null;
+    let service = null;
 
     find('.tutor-chat-scope').textContent = recordId + ' · ' + modelLabel;
 
@@ -99,25 +126,35 @@
     }
 
     async function checkStatus() {
-      if (!localServer()) {
+      if (!localServer() && !isWorkerOrigin(window.location) && !isProjectPage(window.location)) {
         showSetup();
         return;
       }
-      notice.textContent = 'Connecting to the local chat service…';
+      notice.textContent = 'Connecting to record chat…';
+      reconnect.hidden = true;
+      const control = new AbortController();
+      const abort = () => control.abort();
+      lifetime.signal.addEventListener('abort', abort, {once: true});
+      const timer = setTimeout(abort, 12000);
       try {
-        const response = await fetch(endpoint + '/status', {
-          signal: lifetime.signal, cache: 'no-store', mode: 'same-origin', redirect: 'error'
+        service = await resolveService(control.signal);
+        const response = await fetch(service.endpoint + '/status', {
+          signal: control.signal, cache: 'no-store', mode: service.mode,
+          credentials: 'omit', redirect: 'error'
         });
         const info = response.ok && await response.json();
         if (lifetime.signal.aborted) return;
-        if (info && info.available === true) {
-          notice.hidden = true;
-          form.hidden = false;
-        } else {
-          showSetup();
-        }
+        if (!info || info.available !== true) throw new Error('Unavailable');
+        notice.hidden = true;
+        form.hidden = false;
       } catch {
-        if (!lifetime.signal.aborted) showSetup();
+        if (lifetime.signal.aborted) return;
+        if (localServer()) showSetup();
+        else notice.textContent = 'Record chat is currently unavailable. You can still review this record’s evidence below.';
+        reconnect.hidden = false;
+      } finally {
+        clearTimeout(timer);
+        lifetime.signal.removeEventListener('abort', abort);
       }
     }
 
@@ -152,10 +189,12 @@
       addTurn('You', prompt);
       const reply = addTurn('AI response', '');
       const userMessage = {role: 'user', content: prompt};
+      let timedOut = false;
+      const timer = setTimeout(() => { timedOut = true; control.abort(); }, 125000);
       question.value = '';
       try {
-        const response = await fetch(endpoint, {
-          method: 'POST', mode: 'same-origin', redirect: 'error',
+        const response = await fetch(service.endpoint, {
+          method: 'POST', mode: service.mode, credentials: 'omit', redirect: 'error',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({recordId, model, messages: [...history, userMessage]}),
           signal: control.signal
@@ -176,9 +215,13 @@
         if (lifetime.signal.aborted) return;
         reply.label.textContent = 'Incomplete reply';
         if (!reply.text.textContent) reply.text.textContent = 'No answer received.';
-        status.textContent = control.signal.aborted ? 'Reply stopped.' : error.message || 'Connection failed. Please try again.';
+        if (timedOut) status.textContent = 'The reply timed out. Send your question again to retry.';
+        else if (control.signal.aborted) status.textContent = 'Reply stopped.';
+        else if (error.name === 'TypeError') status.textContent = 'Connection lost. Check your connection and send again.';
+        else status.textContent = error.message || 'Connection failed. Please try again.';
         question.value = prompt;
       } finally {
+        clearTimeout(timer);
         active = null;
         setBusy(false);
       }
@@ -194,6 +237,7 @@
       });
       examples.append(button);
     }
+    reconnect.addEventListener('click', checkStatus);
     form.addEventListener('submit', submit);
     stop.addEventListener('click', () => active?.abort());
     checkStatus();
@@ -215,6 +259,20 @@
       current = makePanel(recordId, model, modelLabel);
     }
     slot.replaceChildren(current.panel);
+    // On a narrow screen the entire queue is above the record detail.
+    const heading = slot.closest?.('.workspace-grid')?.querySelector('.panel-head');
+    if (heading && !heading.parentNode.querySelector('.tutor-chat-jump')) {
+      const jump = document.createElement('button');
+      jump.type = 'button';
+      jump.className = 'quiet-button tutor-chat-jump';
+      jump.textContent = 'Open chat for ' + recordId;
+      jump.addEventListener('click', () => {
+        current.panel.open = true;
+        current.panel.querySelector('summary').focus({preventScroll: true});
+        current.panel.scrollIntoView({block: 'start'});
+      });
+      heading.insertAdjacentElement('afterend', jump);
+    }
   }
 
   window.LAB_TUTOR_CHAT = {mount, close};

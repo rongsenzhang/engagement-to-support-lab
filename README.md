@@ -21,7 +21,7 @@ Kortext product, a Stream integration or a reproduction of its proprietary model
 | View | Purpose |
 |---|---|
 | Research question | Compare the historical activity model, contextual model and transparent reference rule at the same review workload; inspect successes and failures. |
-| Review queue | Inspect a record, compare models and export the review list. In local chat mode, ask follow-up questions about the selected record's day-28 evidence. |
+| Review queue | Inspect a record, compare models and export the review list. Ask follow-up questions about the selected record’s day-28 evidence in the online tutor chat. |
 | Model evidence | Compare ranking, probability error, calibration and capacity trade-offs, with evaluation boundaries and aggregate error checks. |
 | Course robustness | Inspect within-course results, held-out courses, a course-prior baseline, a controlled nonlinear comparator and simulated late/missing records. |
 | Tutor practice | Work through four tasks using 50 fictional cases; save initial and revised judgements, select five records, pause tasks and export/restore a session. |
@@ -58,29 +58,25 @@ v0.4. Publishing the website does not automatically create a release tag or ZIP.
 
 ### Ask about a review-queue record
 
-On macOS you can double-click `start_tutor_chat.command` in Finder. From a terminal on any supported platform, run this command in the project directory:
+On a phone or computer, open the [hosted review queue](https://engagement-to-support-chat.rongsenzhang-common-hours-8c01a2fc7d8b.workers.dev/#queue), choose a record, and expand
+**Discuss this record with AI**. Try “Which observations support checking the
+submission record, and what would a late data feed change?” Replies appear as
+they are generated. You can follow up or stop a reply. Selecting another
+record or model starts a fresh conversation.
 
-```sh
-python3 run_demo.py --chat
-```
+The hosted service uses the project owner’s API credits. Visitors can use a
+normal browser. Each question sends recent messages and the selected record’s
+public day-28 evidence to OpenAI. Revealing the historical outcome on screen
+does not add it to that evidence. Use public demo details in questions.
+The owner configures the key once in the hosted service’s encrypted settings.
+See the [hosting and key setup instructions](docs/deployment.md#hosted-tutor-chat).
 
-Paste your existing OpenAI API key at the **hidden terminal prompt** and press
-Enter. The server keeps it in memory for that run. If your terminal already
-has `OPENAI_API_KEY` set, the server uses that value. Close the session with
-Ctrl+C. Keep keys out of chat messages, source files and shell commands.
-
-Open **Review queue**, select a record and ask, for example, “Which facts here
-support checking the submission record, and what would a late data feed change?”
-Read the answer as it streams in, then ask a follow-up. Each question uses your OpenAI API credits.
-The local server sends the question, recent conversation and selected public
-day-28 evidence to OpenAI. Keep personal student details and private study notes
-out of questions. The evidence includes only information available at the
-snapshot, even if you reveal the later outcome on the page.
-
-GitHub Pages and the standalone HTML provide the static review queue. Chat runs
-in the local server and needs internet access. The default model is
-`gpt-4.1-mini`; set `OPENAI_MODEL` in the launching environment to select a
-different Responses API text model with streaming support.
+For a private local session, run `python3 run_demo.py --chat` or double-click
+`start_tutor_chat.command` on macOS. Enter your own key at the hidden terminal
+prompt. The local server keeps it in memory until you press Ctrl+C. The offline
+HTML continues to work for reviewing records. Chat needs internet access.
+The default model is `gpt-4.1-mini`. Use `OPENAI_MODEL` to select another
+streaming Responses API text model available to the project.
 
 ## What the completed analysis found
 

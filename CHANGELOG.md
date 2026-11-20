@@ -4,9 +4,10 @@ Versions identify this independent research prototype, not Kortext Stream releas
 
 ## Unreleased
 
-- Added optional local tutor chat to the review queue. A tutor can discuss the
-  selected record's day-28 evidence using a personal OpenAI API key entered at
-  startup. Replies stream into the record view and support follow-up questions.
+- Added streaming AI chat to each review-queue record on phones and computers.
+  The hosted service sends day-28 evidence for the selected model, supports
+  follow-ups and enforces daily and hourly request limits. The local launcher
+  supports private sessions with a separate key.
 
 ## v0.4 — merged and deployed, 2026-11-15 (not tagged)
 

@@ -50,4 +50,18 @@
 .tutor-chat-turn { border-top: 1px solid var(--line); padding: 9px 0; }
 .tutor-chat-turn strong { color: var(--teal-dark); font-size: 12px; }
 .tutor-chat-turn p { white-space: pre-wrap; margin: 3px 0; font-size: 13px; }
-@media print { .tutor-chat { display: none; } }
+.tutor-chat-jump { display: none; }
+@media (max-width: 900px) {
+  .tutor-chat-jump { display: block; min-height: 44px; margin: 8px 16px; }
+  #tutor-chat-slot { grid-column: 1 / -1; min-width: 0; }
+}
+@media (max-width: 640px) {
+  .tutor-chat { min-width: 0; }
+  .tutor-chat-body { padding: 12px; }
+  .tutor-chat textarea { font-size: 16px; }
+  .tutor-chat summary, .tutor-chat button { min-height: 44px; }
+  .tutor-chat button { max-width: 100%; white-space: normal; }
+  .tutor-chat-status { flex-basis: 100%; overflow-wrap: anywhere; }
+  .tutor-chat-replies { max-height: 45vh; }
+}
+@media print { .tutor-chat, .tutor-chat-jump { display: none; } }

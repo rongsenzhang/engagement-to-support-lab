@@ -1,0 +1,19 @@
+{
+  "name": "engagement-to-support-chat",
+  "main": "worker.mjs",
+  "compatibility_date": "2025-09-01",
+  "workers_dev": true,
+  "assets": {
+    "directory": "../dist/cloud-assets",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  },
+  "durable_objects": {
+    "bindings": [
+      { "name": "BUDGET", "class_name": "ChatBudget" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["ChatBudget"] }
+  ]
+}

@@ -1,12 +1,16 @@
 """Package the offline app and its reproducible sources. No third-party packages needed."""
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 from zipfile import ZipFile, ZIP_DEFLATED
 
 ROOT = Path(__file__).resolve().parent
 VERSION = '0.4'
+
+def private_env(name):
+    return name in {'.env', '.dev.vars'} or name.startswith(('.env.', '.dev.vars.'))
 
 def main():
     dist = ROOT / 'dist'
@@ -30,19 +34,19 @@ def main():
     app.write_text(html, encoding='utf-8')
     source = dist / ('Engagement_Lab_v' + VERSION + '_Source.zip')
     excluded = {'.venv', 'data', 'dist', '__pycache__', '.pytest_cache', '.git',
-                'private_study', 'secrets', '.secrets', '.ssh', '.aws'}
+                'private_study', 'secrets', '.secrets', '.ssh', '.aws', '.wrangler', 'node_modules'}
     with ZipFile(source, 'w', ZIP_DEFLATED, compresslevel=8) as archive:
-        for path in sorted(ROOT.rglob('*')):
-            relative = path.relative_to(ROOT)
-            if path.is_symlink() or excluded.intersection(relative.parts):
-                continue
-            if any(part == '.env' or part.startswith('.env.') for part in relative.parts):
-                continue
-            if not path.is_file() or path.name in {'.DS_Store', '.netrc', '.npmrc', '.pypirc'}:
-                continue
-            if path.suffix.lower() in {'.log', '.pyc', '.key', '.pem', '.p12', '.pfx'}:
-                continue
-            archive.write(path, 'engagement_lab/' + relative.as_posix())
+        for folder, dirs, names in os.walk(ROOT):
+            dirs[:] = sorted(d for d in dirs if d not in excluded and not private_env(d))
+            for name in sorted(names):
+                path = Path(folder) / name
+                if private_env(name) or name in excluded or path.is_symlink() or not path.is_file():
+                    continue
+                if name in {'.DS_Store', '.netrc', '.npmrc', '.pypirc'}:
+                    continue
+                if path.suffix.lower() in {'.log', '.pyc', '.key', '.pem', '.p12', '.pfx'}:
+                    continue
+                archive.write(path, 'engagement_lab/' + path.relative_to(ROOT).as_posix())
     info = {p.name: {'bytes': p.stat().st_size, 'sha256': hashlib.sha256(p.read_bytes()).hexdigest()}
             for p in (app, source)}
     (dist / 'checksums.json').write_text(json.dumps(info, indent=2) + '\n')

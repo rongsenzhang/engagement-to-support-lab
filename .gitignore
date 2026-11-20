@@ -8,3 +8,7 @@ dist/
 private_study/
 .env
 .env.*
+.dev.vars
+.dev.vars.*
+.wrangler/
+node_modules/

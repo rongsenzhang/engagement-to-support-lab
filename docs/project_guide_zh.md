@@ -25,7 +25,11 @@ python3 run_demo.py
 
 ## 在导师复核队列中使用实时聊天
 
-在这台电脑的终端运行下面两行：
+手机或电脑打开[云端复核队列](https://engagement-to-support-chat.rongsenzhang-common-hours-8c01a2fc7d8b.workers.dev/#queue)，选择记录，展开 **Discuss this record with AI**。可以先问“这条记录的哪些变化值得导师核实？”，再追问依据。切换记录或模型会开始新对话。网页访客无需安装软件或填写密钥。
+
+项目所有者只需在 Cloudflare 的 **Workers & Pages → engagement-to-support-chat → Settings → Variables and Secrets** 添加一项，类型选 **Secret**，名称填 `OPENAI_API_KEY`，值填自己的 key，然后点 **Deploy**。网页请求由云端处理，关掉个人电脑后仍可使用。公开 Demo 共用项目所有者的 OpenAI 额度，每小时每个公网 IP 最多发送 10 个问题，全站每天最多 100 个问题（UTC）。
+
+如果希望另外开一个使用自己额度的本地会话，可在终端运行下面两行：
 
 ```sh
 cd '/Users/rongsen/Documents/Codex/2026-11-08/new-chat/engagement-to-support-lab'
@@ -40,11 +44,11 @@ python3 run_demo.py --chat
 
 打开 **Review queue**，选中一条记录，在记录下方提问，例如“这条记录有哪些迹象值得核实？
 如果提交数据晚到了，我应该先查什么？”回答会逐步显示，可以围绕同一记录继续追问。
-每次发送时，本机服务会把问题、最近几轮对话和该条公开记录第 28 天可见的证据发送给 OpenAI，
+每次发送时，聊天服务会把问题、最近几轮对话和该条公开记录第 28 天可见的证据发送给 OpenAI，
 按你的 API 项目计费。只使用 Demo 的公开案例，提问时避免填写真实学生信息或私密试用笔记。
 
 默认模型是 `gpt-4.1-mini`，可通过 `OPENAI_MODEL` 选择有权访问且支持 Responses API 流式文本输出的模型。
-GitHub Pages 和离线 HTML 展示静态队列；使用聊天需要启动上面的本机服务并联网。
+离线 HTML 可浏览静态队列。在线提问需要网络连接。
 **Tutor practice** 的四项试用任务独立运行，试用记录保存在浏览器中并可手动导出。
 
 ## 应用版本和旧实验编号有什么区别

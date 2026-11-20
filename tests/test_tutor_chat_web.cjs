@@ -29,27 +29,37 @@ class Element {
   append(...nodes) { this.children.push(...nodes); }
   replaceChildren(...nodes) { this.children = nodes; }
   addEventListener(type, action) { this.listeners[type] = action; }
-  focus() {}
+  focus() { this.focused = true; }
+  scrollIntoView() { this.scrolled = true; }
   fire(type) { return this.listeners[type]({preventDefault() {}}); }
 }
 
-function harness(replies, url = 'http://localhost:8765') {
+function harness(replies, url = 'http://localhost:8765', getResponse) {
   const calls = [];
   const window = {location: new URL(url)};
   const context = {
     window, document: {createElement: () => new Element(), createTextNode: text => ({textContent: text})},
-    AbortController, TextDecoder,
+    AbortController, TextDecoder, URL, setTimeout, clearTimeout,
     fetch: async (path, options) => {
       calls.push({path, ...options});
-      if (options.method !== 'POST') return Response.json({available: true});
+      if (options.method !== 'POST') return getResponse ? getResponse(path, options) : Response.json({available: true});
       return replies.shift()(options);
     }
   };
   vm.runInNewContext(source, context);
   const slot = new Element();
+  // Exercise the narrow-layout shortcut using the queue header recreated on render.
+  let jump;
+  const heading = {
+    parentNode: {querySelector: () => jump},
+    insertAdjacentElement(position, button) { jump = button; }
+  };
+  slot.closest = () => ({querySelector: () => heading});
   return {
+    get jump() { return jump; },
     calls, api: window.LAB_TUTOR_CHAT,
     async select(record = 'S-A', model = 'context') {
+      jump = null;
       window.LAB_TUTOR_CHAT.mount(slot, record, model, model);
       await tick();
       return slot.children[0];
@@ -139,4 +149,70 @@ test('changing record or leaving the queue aborts work; Stop restores the active
   h.api.close();
   await third;
   assert.equal(h.calls.at(-1).signal.aborted,true);
+});
+
+const pages = 'https://rongsenzhang.github.io/engagement-to-support-lab/';
+const worker = 'https://record-chat.test-account.workers.dev';
+
+test('published Pages uses its project config and sends only the requested record to its worker', async () => {
+  const h = harness([() => stream(Buffer.from('{"type":"done"}\n'))], pages, path =>
+    Response.json(path.endsWith('config.json') ? {origin: worker} : {available: true}));
+  const panel = await h.select();
+  assert.equal(h.calls[0].path, '/engagement-to-support-lab/tutor-chat-config.json');
+  assert.equal(h.calls[0].mode, 'same-origin');
+  assert.equal(h.calls[1].path, worker + '/api/tutor-chat/status');
+  await submit(panel, 'What should I verify?');
+  const post = h.calls.at(-1);
+  assert.equal(post.path, worker + '/api/tutor-chat');
+  assert.equal(post.mode, 'cors');
+  assert.equal(post.credentials, 'omit');
+  assert.equal(post.redirect, 'error');
+  assert.deepEqual(Object.keys(JSON.parse(post.body)).sort(), ['messages','model','recordId']);
+});
+
+test('a hosted Worker site calls its same-origin backend without Pages configuration', async () => {
+  const h = harness([], worker);
+  assert.equal((await h.select()).querySelector('form').hidden, false);
+  assert.equal(h.calls.length, 1);
+  assert.equal(h.calls[0].path, '/api/tutor-chat/status');
+  assert.equal(h.calls[0].mode, 'same-origin');
+});
+
+test('missing or unsafe project config does not contact another origin and can be retried', async () => {
+  for (const bad of [null, 'https://evil.example', worker + '/other', 'http://x.workers.dev', worker + '?url=test']) {
+    let failed = true;
+    const h = harness([], pages, path => {
+      if (path.endsWith('config.json')) {
+        if (failed && bad === null) return new Response(null,{status:404});
+        return Response.json({origin: failed ? bad : worker});
+      }
+      return Response.json({available:true});
+    });
+    const panel = await h.select();
+    assert.equal(h.calls.length, 1);
+    assert.equal(panel.querySelector('form').hidden, true);
+    assert.match(panel.querySelector('.tutor-chat-notice').textContent,/currently unavailable/);
+    failed = false;
+    await panel.querySelector('[data-reconnect]').fire('click');
+    assert.equal(panel.querySelector('form').hidden, false);
+  }
+});
+
+test('other GitHub projects on the same owner do not search for a backend', async () => {
+  const h = harness([], 'https://rongsenzhang.github.io/other/');
+  await h.select();
+  assert.equal(h.calls.length, 0);
+});
+
+test('queue shortcut opens and focuses the current chat when the record changes', async () => {
+  const h = harness([], worker);
+  const first = await h.select('S-A');
+  assert.match(h.jump.textContent, /S-A/);
+  const second = await h.select('S-B');
+  assert.match(h.jump.textContent, /S-B/);
+  h.jump.fire('click');
+  assert.equal(second.open, true);
+  assert.equal(second.querySelector('summary').focused, true);
+  assert.equal(second.scrolled, true);
+  assert.ok(!first.open);
 });
