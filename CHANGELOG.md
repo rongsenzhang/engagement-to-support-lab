@@ -2,6 +2,13 @@
 
 Versions identify this independent research prototype, not Kortext Stream releases.
 
+## Unreleased
+
+- Added streaming AI chat to each review-queue record on phones and computers.
+  The hosted service sends day-28 evidence for the selected model, supports
+  follow-ups and enforces daily and hourly request limits. The local launcher
+  supports private sessions with a separate key.
+
 ## v0.4 — merged and deployed, 2026-11-15 (not tagged)
 
 - Published through [PR #10](https://github.com/rongsenzhang/engagement-to-support-lab/pull/10) at main commit `9f759ce6940534455a90d88fc778eae4557be7b1`; [Pages run 43769188941](https://github.com/rongsenzhang/engagement-to-support-lab/actions/runs/43769188941) succeeded. PR #9 first merged the implementation into the research branch; PR #10 completed its delivery to main. No v0.4 release tag or GitHub Release download has been created.

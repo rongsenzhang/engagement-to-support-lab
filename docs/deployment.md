@@ -22,3 +22,52 @@ the rebuild. Full checkout history alone cannot preserve a commit rewritten by
 squash/rebase. After merging, verify the Pages run before calling it published.
 
 Official setup and action versions checked on 8 November 2026: [GitHub Pages custom workflows](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).
+
+## Hosted tutor chat
+
+Cloudflare Workers serves the same review queue over HTTPS and streams replies
+from OpenAI. The service runs on Cloudflare when the owner's computer is off.
+The public website and the downloadable research results can also be used
+independently of the chat service.
+
+### Activate or rotate the owner's key
+
+1. Open **Workers & Pages → engagement-to-support-chat → Settings → Variables and Secrets** in the [Cloudflare dashboard](https://dash.cloudflare.com/).
+2. Choose **Add**, select **Secret**, and name it `OPENAI_API_KEY`. Paste the existing project key into the value field and select **Deploy**. To rotate the key, edit this secret in the same place.
+3. Open the Worker's HTTPS address with `/#queue` on a phone or computer. Select a record, expand **Discuss this record with AI**, and send a short question. A streamed answer verifies the whole connection. The status endpoint shows whether the secret is configured. Only a completed answer verifies OpenAI model access and billing.
+
+The secret stays on the server. Visitors share the owner's OpenAI project
+usage. The Worker reserves up to 100 requests per UTC day, and 10 requests per
+public IP per UTC hour, before contacting OpenAI. A shared network uses a
+single hourly allowance. Failed or cancelled calls can use a reservation.
+Each request limits the conversation size and asks for at most 700 output tokens.
+The counters persist across server restarts and deployments.
+The app keeps chat history in the open page. It sends the selected evidence
+and recent messages to OpenAI with Responses API storage disabled.
+
+### Publish a reviewed update or roll it back
+
+From the reviewed checkout, run:
+
+```sh
+python3 build_cloud.py
+npx wrangler@4 deploy --keep-vars --config cloud/wrangler.jsonc
+```
+
+Use a Cloudflare account with access to this Worker. The deployment uploads
+the site, its selected-record evidence and the chat service together. Keep the
+same Worker name and account for a stable link. The frontend on GitHub Pages
+reads the production Worker origin from `web/tutor-chat-config.json` after a
+merge to `main`. Its Pages workflow publishes that file with the static app.
+The Worker has its own deployment history. For a rollback, redeploy the
+previous reviewed checkout and revert the corresponding Pages change through
+a PR. If using Workers Builds for later automatic releases, connect this
+repository's `main` branch, use `python3 build_cloud.py` as the build command
+and the Wrangler deploy command above as the deploy command.
+
+Check the queue on the Worker and on GitHub Pages. A missing secret leaves the
+research views usable and the chat panel offers a connection retry. A mobile
+queue has a shortcut to the current record's chat. Verify that changing records
+clears the conversation.
+
+[Cloudflare secret settings](https://developers.cloudflare.com/workers/configuration/secrets/) · [Workers hosting allowances](https://developers.cloudflare.com/workers/platform/pricing/).

@@ -21,16 +21,14 @@ Kortext product, a Stream integration or a reproduction of its proprietary model
 | View | Purpose |
 |---|---|
 | Research question | Compare the historical activity model, contextual model and transparent reference rule at the same review workload; inspect successes and failures. |
-| Review queue | Filter by module, model and capacity; inspect activity, assessment evidence and model explanations; export a review list. Later outcomes are hidden until explicitly revealed. |
+| Review queue | Inspect a record, compare models and export the review list. Ask follow-up questions about the selected record’s day-28 evidence in the online tutor chat. |
 | Model evidence | Compare ranking, probability error, calibration and capacity trade-offs, with evaluation boundaries and aggregate error checks. |
 | Course robustness | Inspect within-course results, held-out courses, a course-prior baseline, a controlled nonlinear comparator and simulated late/missing records. |
 | Tutor practice | Work through four tasks using 50 fictional cases; save initial and revised judgements, select five records, pause tasks and export/restore a session. |
 | Sources & scope | Read the research rationale, public product diagnosis, data attribution and limits on interpretation. |
 
-The browser uses precomputed research results and explicitly invented study
-cases. It does not train models, score uploaded student data, send messages or
-connect to institutional systems. A study export can be restored locally; there
-is no server upload or external AI call.
+The browser uses precomputed research results and invented practice cases.
+The four tutor-practice tasks and session exports run locally in the browser.
 
 ## Open or run the app
 
@@ -57,6 +55,28 @@ for offline use. A downloaded file is a fixed copy and does not update itself.
 [v0.1.0 release](https://github.com/rongsenzhang/engagement-to-support-lab/releases/tag/v0.1.0),
 not a v0.4 release download. Use the live demo or build the current checkout for
 v0.4. Publishing the website does not automatically create a release tag or ZIP.
+
+### Ask about a review-queue record
+
+On a phone or computer, open the [hosted review queue](https://engagement-to-support-chat.rongsenzhang-common-hours-8c01a2fc7d8b.workers.dev/#queue), choose a record, and expand
+**Discuss this record with AI**. Try “Which observations support checking the
+submission record, and what would a late data feed change?” Replies appear as
+they are generated. You can follow up or stop a reply. Selecting another
+record or model starts a fresh conversation.
+
+The hosted service uses the project owner’s API credits. Visitors can use a
+normal browser. Each question sends recent messages and the selected record’s
+public day-28 evidence to OpenAI. Revealing the historical outcome on screen
+does not add it to that evidence. Use public demo details in questions.
+The owner configures the key once in the hosted service’s encrypted settings.
+See the [hosting and key setup instructions](docs/deployment.md#hosted-tutor-chat).
+
+For a private local session, run `python3 run_demo.py --chat` or double-click
+`start_tutor_chat.command` on macOS. Enter your own key at the hidden terminal
+prompt. The local server keeps it in memory until you press Ctrl+C. The offline
+HTML continues to work for reviewing records. Chat needs internet access.
+The default model is `gpt-4.1-mini`. Use `OPENAI_MODEL` to select another
+streaming Responses API text model available to the project.
 
 ## What the completed analysis found
 
