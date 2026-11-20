@@ -31,7 +31,7 @@ test("public site and GitHub Pages use the same response stream without exposing
   const worker = (await getWorker()).default;
   const endpoint = t.mock.method(globalThis, "fetch", async (url, init) => {
     assert.equal(url, "https://api.openai.com/v1/responses");
-    assert.equal(init.redirect, "error");
+    assert.equal(init.redirect, "manual");
     const payload = JSON.parse(init.body);
     assert.equal(payload.store, false);
     assert.equal(payload.stream, true);
@@ -87,6 +87,19 @@ test("bad origin, invalid messages, unknown record and exhausted budget cannot t
   assert.equal(limit.headers.get("retry-after"), "60");
   assert.equal((await worker.fetch(post(question), envFor(500))).status, 503);
   assert.equal(network.mock.callCount(), 0);
+});
+
+test("a redirect from the model endpoint stops the request without forwarding the credential", async t => {
+  const worker = (await getWorker()).default;
+  const provider = t.mock.method(globalThis, "fetch", async (url, options) => {
+    assert.equal(url, "https://api.openai.com/v1/responses");
+    assert.equal(options.redirect, "manual");
+    return new Response(null, {status: 307, headers: {Location: "https://redirect.invalid/"}});
+  });
+  const response = await worker.fetch(post(question), envFor());
+  assert.equal(response.status, 502);
+  assert.equal(provider.mock.callCount(), 1);
+  assert.equal((await response.text()).includes("redirect.invalid"), false);
 });
 
 test("partial and incomplete provider output is marked as an error", async t => {

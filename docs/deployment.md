@@ -51,7 +51,7 @@ From the reviewed checkout, run:
 
 ```sh
 python3 build_cloud.py
-npx wrangler@4 deploy --config cloud/wrangler.jsonc
+npx wrangler@4 deploy --keep-vars --config cloud/wrangler.jsonc
 ```
 
 Use a Cloudflare account with access to this Worker. The deployment uploads

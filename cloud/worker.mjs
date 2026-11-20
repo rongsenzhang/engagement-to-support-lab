@@ -166,7 +166,8 @@ async function answer(request, env, evidence, messages, headers) {
   let upstream;
   try {
     upstream = await fetch(PROVIDER_URL, {
-      method: "POST", redirect: "error", signal: controller.signal,
+      // workerd supports manual redirect handling. Non-200 replies below stop here.
+      method: "POST", redirect: "manual", signal: controller.signal,
       headers: {Authorization: "Bearer " + env.OPENAI_API_KEY, "Content-Type": "application/json", Accept: "text/event-stream"},
       body: JSON.stringify({
         model: env.OPENAI_MODEL || "gpt-4.1-mini", instructions, stream: true, store: false, max_output_tokens: 700,
