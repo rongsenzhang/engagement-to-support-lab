@@ -77,6 +77,7 @@ function app(options = {}) {
     if (options.referenceEdit) options.referenceEdit(window.LAB_REFERENCE);
   }
   if (options.studyUI) window.LAB_STUDY_UI = options.studyUI;
+  if (options.chatUI) window.LAB_TUTOR_CHAT = options.chatUI;
   vm.runInContext(source['app.js'], context, { filename: 'app.js' });
   return {
     main, window, navigation, nodes,
@@ -316,4 +317,20 @@ test('trial routing pauses the active session before leaving and restores the mo
   assert.equal(renders, 2);
   assert.match(instance.html, /Synthetic task state retained/);
   assert.match(app({hash:'#trial'}).html, /Tutor practice is unavailable/);
+});
+
+test('queue mounts tutor chat with only the active alias and model and closes it on navigation', () => {
+  const events = [];
+  const chatUI = {mount(slot, ...context) { events.push(context); }, close() { events.push('closed'); }};
+  const a = app({hash:'#queue', chatUI});
+  const [alias, model] = events.at(-1);
+  assert.match(alias, /^S-/);
+  assert.equal(model,'context');
+  const first = events.at(-1);
+  a.change('reveal-outcomes', undefined, true);
+  assert.deepEqual(events.at(-1),first);
+  a.change('model-select','reference');
+  assert.equal(events.at(-1)[1],'reference');
+  a.route('trial');
+  assert.equal(events.at(-1),'closed');
 });

@@ -23,6 +23,30 @@ python3 run_demo.py
 也可以直接打开 `web/index.html`，或运行 `python3 package_demo.py` 后打开
 `dist/Engagement_Lab_v0.4.html`。打包文件包含全部网页资源。
 
+## 在导师复核队列中使用实时聊天
+
+在这台电脑的终端运行下面两行：
+
+```sh
+cd '/Users/rongsen/Documents/Codex/2026-11-08/new-chat/engagement-to-support-lab'
+python3 run_demo.py --chat
+```
+
+在 Mac 上也可以在 Finder 中双击项目内的 `start_tutor_chat.command`。启动器会选择一个可用端口并打开复核队列。
+
+出现隐藏输入提示后，粘贴你已有的 OpenAI API key，按回车。输入时屏幕不会显示字符；
+密钥只在这次本地服务运行期间保存在内存里。若终端已设置 `OPENAI_API_KEY`，程序会直接使用它。
+密钥只在终端的密钥提示处输入，避免发到聊天、写进代码或粘贴到命令行。演示结束后按 Ctrl+C 关闭服务。
+
+打开 **Review queue**，选中一条记录，在记录下方提问，例如“这条记录有哪些迹象值得核实？
+如果提交数据晚到了，我应该先查什么？”回答会逐步显示，可以围绕同一记录继续追问。
+每次发送时，本机服务会把问题、最近几轮对话和该条公开记录第 28 天可见的证据发送给 OpenAI，
+按你的 API 项目计费。只使用 Demo 的公开案例，提问时避免填写真实学生信息或私密试用笔记。
+
+默认模型是 `gpt-4.1-mini`，可通过 `OPENAI_MODEL` 选择有权访问且支持 Responses API 流式文本输出的模型。
+GitHub Pages 和离线 HTML 展示静态队列；使用聊天需要启动上面的本机服务并联网。
+**Tutor practice** 的四项试用任务独立运行，试用记录保存在浏览器中并可手动导出。
+
 ## 应用版本和旧实验编号有什么区别
 
 顶部 v0.4 指现在运行的整个应用。旧方案、结果文件中的 v0.1、v0.2、v0.3

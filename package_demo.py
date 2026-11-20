@@ -13,8 +13,8 @@ def main():
     dist.mkdir(exist_ok=True)
     html = (ROOT / 'web/index.html').read_text(encoding='utf-8')
     def resource(name):
-        path = (ROOT / 'web' / name).resolve()
-        if path.parent != (ROOT / 'web').resolve():
+        path = ROOT / 'web' / name
+        if path.is_symlink() or path.resolve().parent != (ROOT / 'web').resolve():
             raise ValueError('Only local application resources can be packaged')
         return path.read_text(encoding='utf-8')
     for name in re.findall(r'<link rel="stylesheet" href="([^"]+)">', html):
@@ -29,13 +29,18 @@ def main():
     app = dist / ('Engagement_Lab_v' + VERSION + '.html')
     app.write_text(html, encoding='utf-8')
     source = dist / ('Engagement_Lab_v' + VERSION + '_Source.zip')
-    excluded = {'.venv', 'data', 'dist', '__pycache__', '.pytest_cache', '.git', 'private_study'}
+    excluded = {'.venv', 'data', 'dist', '__pycache__', '.pytest_cache', '.git',
+                'private_study', 'secrets', '.secrets', '.ssh', '.aws'}
     with ZipFile(source, 'w', ZIP_DEFLATED, compresslevel=8) as archive:
         for path in sorted(ROOT.rglob('*')):
             relative = path.relative_to(ROOT)
-            if not path.is_file() or excluded.intersection(relative.parts):
+            if path.is_symlink() or excluded.intersection(relative.parts):
                 continue
-            if path.suffix in {'.log', '.pyc'} or path.name == '.DS_Store':
+            if any(part == '.env' or part.startswith('.env.') for part in relative.parts):
+                continue
+            if not path.is_file() or path.name in {'.DS_Store', '.netrc', '.npmrc', '.pypirc'}:
+                continue
+            if path.suffix.lower() in {'.log', '.pyc', '.key', '.pem', '.p12', '.pfx'}:
                 continue
             archive.write(path, 'engagement_lab/' + relative.as_posix())
     info = {p.name: {'bytes': p.stat().st_size, 'sha256': hashlib.sha256(p.read_bytes()).hexdigest()}

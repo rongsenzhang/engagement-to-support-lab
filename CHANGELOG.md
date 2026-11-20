@@ -2,6 +2,12 @@
 
 Versions identify this independent research prototype, not Kortext Stream releases.
 
+## Unreleased
+
+- Added optional local tutor chat to the review queue. A tutor can discuss the
+  selected record's day-28 evidence using a personal OpenAI API key entered at
+  startup. Replies stream into the record view and support follow-up questions.
+
 ## v0.4 — merged and deployed, 2026-11-15 (not tagged)
 
 - Published through [PR #10](https://github.com/rongsenzhang/engagement-to-support-lab/pull/10) at main commit `9f759ce6940534455a90d88fc778eae4557be7b1`; [Pages run 43769188941](https://github.com/rongsenzhang/engagement-to-support-lab/actions/runs/43769188941) succeeded. PR #9 first merged the implementation into the research branch; PR #10 completed its delivery to main. No v0.4 release tag or GitHub Release download has been created.
