@@ -14,6 +14,31 @@ motivation, diagnosis, attendance, later outcomes, deadlines, extensions or unob
 Explain uncertainty from absent or delayed records. Do not score, rank or decide who receives
 services, or contact anyone. The tutor retains responsibility. Keep private details out.`;
 
+const REPORT_MODEL = "gpt-6.2-sol";
+const reportInstructions = `Write a brief English analysis of the currently selected day-28 historical record for its tutor.
+Use only the supplied record and the selected model. Write four plain-text sections in this exact
+order. Put each heading alone on a line, followed on the next line by one or two short sentences.
+Use these literal headings: Observed evidence, Model interpretation, Missing context, Next check.
+In Observed evidence describe the four-week pattern using actual click counts and compare
+equal-length recent windows for active days where available. Identify day 28 as the cutoff.
+Discuss observed assessment counts with their applicable denominator. If none was due, say so.
+In Model interpretation explain this model's output with its correct units. If it is a
+probability, use a percentage with sensible rounding. For R1 use index points; inactivity uses days.
+Support your explanation with the supplied components or contributions where available. Direction
+or association can explain a model output, never establish the cause of a person's behaviour.
+When engagement_context is present, include a specific resource-use pattern or dated assessment
+from it. Forum clicks are accesses, not posts; quiz clicks are not marks. Counts do not measure
+study time or knowledge. Do not claim these descriptive details are fitted model inputs. Do not fabricate a comparison or
+treat a historical reference or a simulation as a fact about this learner. Do not predict exact
+future behaviour, infer personal reasons, label a learner, assign a service or decide whom to contact.
+In Missing context identify one meaningful uncertainty. In Next check give one specific record
+or course detail the tutor could verify. Use accessible prose and quote evidence selectively.`;
+
+async function digest(value) {
+  const bytes = await crypto.subtle.digest("SHA-256", encoder.encode(value));
+  return Array.from(new Uint8Array(bytes), n => n.toString(16).padStart(2, "0")).join("");
+}
+
 function json(value, status, headers) {
   return Response.json(value, { status, headers });
 }
@@ -48,9 +73,10 @@ function hasFields(obj, fields) {
 }
 
 function validQuestion(body) {
-  if (!hasFields(body, ["recordId", "model", "messages"])
-      || typeof body.recordId !== "string" || !/^S-[A-F0-9]{10}$/.test(body.recordId)
-      || !MODELS.has(body.model) || !Array.isArray(body.messages)) return false;
+  if (!body || typeof body.recordId !== "string" || !/^S-[A-F0-9]{10}$/.test(body.recordId)
+      || !MODELS.has(body.model)) return false;
+  if (body.mode === "analysis") return hasFields(body, ["recordId", "model", "mode"]);
+  if (!hasFields(body, ["recordId", "model", "messages"]) || !Array.isArray(body.messages)) return false;
   const messages = body.messages;
   if (messages.length > 9 || messages.length % 2 !== 1) return false;
   return messages.every((message, i) => {
@@ -67,6 +93,7 @@ export class ChatBudget {
     this.storage = ctx.storage;
     this.sql = ctx.storage.sql;
     this.sql.exec("CREATE TABLE IF NOT EXISTS counters (bucket TEXT PRIMARY KEY, used INTEGER NOT NULL, expires INTEGER NOT NULL)");
+    this.sql.exec("CREATE TABLE IF NOT EXISTS reports (cache_key TEXT PRIMARY KEY, report TEXT NOT NULL, owner TEXT NOT NULL, expires INTEGER NOT NULL)");
     this.sql.exec("CREATE TABLE IF NOT EXISTS settings (name TEXT PRIMARY KEY, value TEXT NOT NULL)");
     this.sql.exec("INSERT OR IGNORE INTO settings VALUES ('salt', ?)", crypto.randomUUID());
     this.salt = this.sql.exec("SELECT value FROM settings WHERE name='salt'").one().value;
@@ -74,28 +101,48 @@ export class ChatBudget {
 
   async fetch(request) {
     const now = Date.now();
+    const key = request.headers.get("X-Report-Key");
+    const owner = request.headers.get("X-Report-Owner");
+    if (new URL(request.url).pathname === "/finish") {
+      const report = await request.text();
+      if (report.trim() && report.length <= 20000) {
+        this.sql.exec("UPDATE reports SET report=?, owner='', expires=? WHERE cache_key=? AND owner=?",
+          report, now + 86400000, key, owner);
+      } else {
+        this.sql.exec("DELETE FROM reports WHERE cache_key=? AND owner=?", key, owner);
+      }
+      return new Response(null, {status: 204});
+    }
     const hour = Math.floor(now / 3600000);
     const day = Math.floor(now / 86400000);
     const ip = request.headers.get("X-Visitor") || "unknown";
-    const digest = await crypto.subtle.digest("SHA-256", encoder.encode(this.salt + "|" + hour + "|" + ip));
-    const visitor = Array.from(new Uint8Array(digest), n => n.toString(16).padStart(2, "0")).join("");
+    const visitor = await digest(this.salt + "|" + hour + "|" + ip);
     const entries = [
       { bucket: "day:" + day, limit: 100, expires: (day + 1) * 86400000 },
       { bucket: "hour:" + visitor, limit: 10, expires: (hour + 1) * 3600000 },
     ];
-    const retryAfter = this.storage.transactionSync(() => {
+    return this.storage.transactionSync(() => {
       this.sql.exec("DELETE FROM counters WHERE expires <= ?", now);
+      this.sql.exec("DELETE FROM reports WHERE expires <= ?", now);
+      if (key) {
+        const row = this.sql.exec("SELECT report FROM reports WHERE cache_key=?", key).toArray()[0];
+        if (row) return row.report ? new Response(row.report) : new Response(null, {status: 409});
+      }
       for (const {bucket, limit, expires} of entries) {
         const usage = this.sql.exec("SELECT used FROM counters WHERE bucket=?", bucket).toArray()[0];
-        if (usage && usage.used >= limit) return Math.ceil((expires - now) / 1000);
+        if (usage && usage.used >= limit) {
+          return new Response(null, {status: 429, headers: {"Retry-After": String(Math.ceil((expires - now) / 1000))}});
+        }
       }
       for (const {bucket, expires} of entries) {
         this.sql.exec("INSERT INTO counters VALUES (?, 1, ?) ON CONFLICT(bucket) DO UPDATE SET used=used+1", bucket, expires);
       }
-      return 0;
+      if (key) {
+        // An interrupted Worker can leave a claim until the upstream timeout plus a grace period.
+        this.sql.exec("INSERT INTO reports VALUES (?, '', ?, ?)", key, owner, now + 150000);
+      }
+      return new Response(null, {status: 204});
     });
-    return new Response(null, retryAfter
-      ? {status: 429, headers: {"Retry-After": String(retryAfter)}} : {status: 204});
   }
 }
 
@@ -152,7 +199,7 @@ async function* parseEvents(stream) {
   }
 }
 
-async function answer(request, env, evidence, messages, headers) {
+async function answer(request, env, evidence, messages, headers, finishReport) {
   const controller = new AbortController();
   const abort = () => controller.abort();
   const timeout = setTimeout(abort, 120000);
@@ -170,20 +217,26 @@ async function answer(request, env, evidence, messages, headers) {
       method: "POST", redirect: "manual", signal: controller.signal,
       headers: {Authorization: "Bearer " + env.OPENAI_API_KEY, "Content-Type": "application/json", Accept: "text/event-stream"},
       body: JSON.stringify({
-        model: env.OPENAI_MODEL || "gpt-4.1-mini", instructions, stream: true, store: false, max_output_tokens: 700,
-        input: [{role: "developer", content: "Review evidence (JSON):\n" + JSON.stringify(evidence)}, ...messages],
+        ...(finishReport
+          ? {model: REPORT_MODEL, instructions: reportInstructions, reasoning: {effort: "low"}, max_output_tokens: 1800}
+          : {model: env.OPENAI_MODEL || "gpt-4.1-mini", instructions, max_output_tokens: 700}),
+        stream: true, store: false,
+        input: [{role: "developer", content: "Review evidence (JSON):\n" + JSON.stringify(evidence)}, ...(messages || [])],
       }),
     });
     if (upstream.status !== 200 || !upstream.body) {
       cleanup();
+      if (finishReport) await finishReport("");
       return json({error: providerError(upstream.status)}, 502, headers);
     }
   } catch {
     cleanup();
+    if (finishReport) await finishReport("");
     return json({error: "Could not connect to OpenAI. Please try again."}, 502, headers);
   }
 
   const events = parseEvents(upstream.body);
+  let report = "";
   let cancelled = false;
   const stream = new ReadableStream({
     async pull(output) {
@@ -191,10 +244,21 @@ async function answer(request, env, evidence, messages, headers) {
         const next = await events.next();
         if (cancelled) return;
         if (!next.done) {
+          if (finishReport) {
+            if (next.value.type === "delta") {
+              report += next.value.text;
+              if (report.length > 20000) throw new Error("Oversized report");
+            } else {
+              if (!report.trim()) throw new Error("Empty report");
+              await finishReport(report);
+              if (cancelled) return;
+            }
+          }
           output.enqueue(encoder.encode(JSON.stringify(next.value) + "\n"));
           if (next.value.type !== "done") return;
         }
       } catch {
+        if (finishReport) await finishReport("");
         if (cancelled) return;
         output.enqueue(encoder.encode('{"type":"error","message":"The reply ended early. Please try again."}\n'));
       }
@@ -205,6 +269,7 @@ async function answer(request, env, evidence, messages, headers) {
     async cancel() {
       cancelled = true;
       cleanup();
+      if (finishReport) await finishReport("");
       await events.return();
     },
   });
@@ -249,16 +314,39 @@ async function route(request, env) {
     const records = await result.json();
     if (!Object.hasOwn(records, body.model)) return fail(400, "This model is unavailable for the selected record.");
     const budget = env.BUDGET.get(env.BUDGET.idFromName("global"));
-    const reservation = await budget.fetch("https://budget.internal/reserve", {
-      method: "POST", headers: {"X-Visitor": request.headers.get("CF-Connecting-IP") || "unknown"},
-    });
+    const evidence = records[body.model];
+    const report = body.mode === "analysis";
+    const internalHeaders = {"X-Visitor": request.headers.get("CF-Connecting-IP") || "unknown"};
+    if (report) {
+      // The evidence asset is server-generated with stable field order and contains cutoff and model data.
+      internalHeaders["X-Report-Key"] = await digest(JSON.stringify([REPORT_MODEL, reportInstructions, body.recordId, body.model, evidence]));
+      internalHeaders["X-Report-Owner"] = crypto.randomUUID();
+    }
+    const reservation = await budget.fetch("https://budget.internal/reserve", {method: "POST", headers: internalHeaders});
+    if (report && reservation.status === 200) {
+      headers.set("Content-Type", "application/x-ndjson; charset=utf-8");
+      const cached = {type: "delta", text: await reservation.text()};
+      return new Response(JSON.stringify(cached) + '\n{"type":"done"}\n', {headers});
+    }
+    if (report && reservation.status === 409) {
+      return fail(409, "This analysis is being generated. Try again shortly.");
+    }
     if (reservation.status === 429) {
       const retry = reservation.headers.get("Retry-After");
       if (retry) headers.set("Retry-After", retry);
       return fail(429, "The public demo has reached its question limit. Please try again later.");
     }
     if (reservation.status !== 204) return fail(503, "Chat is temporarily unavailable.");
-    return await answer(request, env, records[body.model], body.messages, headers);
+    let released = false;
+    async function finishReport(text) {
+      if (released) return;
+      released = true;
+      // The lease expires even if the object is temporarily unavailable.
+      await budget.fetch("https://budget.internal/finish", {
+        method: "POST", headers: internalHeaders, body: text,
+      }).catch(() => {});
+    }
+    return await answer(request, env, evidence, body.messages, headers, report ? finishReport : null);
   } catch {
     return fail(503, "Chat is temporarily unavailable. Please try again later.");
   }

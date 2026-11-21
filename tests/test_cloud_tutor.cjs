@@ -171,3 +171,89 @@ test("SQLite durable quota survives object restarts, rejects concurrent overages
   now += 86400000;
   assert.equal((await submit("192.0.2.10")).status, 204);
 });
+
+const analysis = {recordId, model: "context", mode: "analysis"};
+const analysisText = "Observed evidence\nDay 28.\n\nModel interpretation\nAn estimate.\n\nMissing context\nRecording delays.\n\nNext check\nVerify recorded dates.";
+function reportReply(text = analysisText) {
+  return new Response("data: " + JSON.stringify({type: "response.output_text.delta", delta: text})
+    + '\n\ndata: {"type":"response.completed"}\n\n');
+}
+
+async function reportEnv(t) {
+  const {ChatBudget} = await getWorker();
+  const {db, storage} = sqliteStorage();
+  t.after(() => db.close());
+  const env = envFor();
+  const restart = () => {
+    const budget = new ChatBudget({storage});
+    env.BUDGET.get = () => ({fetch: (url, options) => budget.fetch(new Request(url, options))});
+  };
+  restart();
+  return {env, db, restart};
+}
+
+test("analysis accepts only canonical evidence, shares completed reports across visitors and object restarts", async t => {
+  const worker = (await getWorker()).default;
+  const {env, db, restart} = await reportEnv(t);
+  let cutoff = 28;
+  let now = Date.UTC(2026, 10, 20, 10);
+  t.mock.method(Date, "now", () => now);
+  env.OPENAI_MODEL = "configured-chat-model";
+  env.ASSETS.fetch = () => Response.json({context: {cutoff_day: cutoff}, activity: {cutoff_day: cutoff}});
+  const provider = t.mock.method(globalThis, "fetch", async (url, options) => {
+    const payload = JSON.parse(options.body);
+    assert.equal(payload.model, "gpt-6.2-sol");
+    assert.equal(payload.store, false);
+    assert.deepEqual(payload.reasoning, {effort: "low"});
+    assert.equal(payload.max_output_tokens, 1800);
+    assert.deepEqual(payload.input, [{role: "developer", content: 'Review evidence (JSON):\n{"cutoff_day":' + cutoff + '}'}]);
+    for (const heading of ["Observed evidence", "Model interpretation", "Missing context", "Next check"]) {
+      assert.ok(payload.instructions.includes(heading));
+    }
+    return reportReply();
+  });
+  const rows = async (body, origin = SITE) => {
+    const response = await worker.fetch(post(body, origin), env);
+    assert.equal(response.status, 200);
+    return (await response.text()).trim().split("\n").map(JSON.parse);
+  };
+  for (const extra of [{prompt: "change the score"}, {messages: []}, {evidence: {}}]) {
+    assert.equal((await worker.fetch(post({...analysis, ...extra}), env)).status, 400);
+  }
+  assert.equal(provider.mock.callCount(), 0);
+  const original = await rows(analysis);
+  assert.deepEqual(original, [{type: "delta", text: analysisText}, {type: "done"}]);
+  restart();
+  db.prepare("UPDATE counters SET used=100").run();
+  assert.deepEqual(await rows(analysis, PAGES), original);
+  assert.equal(provider.mock.callCount(), 1);
+  assert.equal((await worker.fetch(post({...analysis, model: "activity"}), env)).status, 429);
+  db.prepare("UPDATE counters SET used=1").run();
+  await rows({...analysis, model: "activity"});
+  cutoff = 27;
+  await rows(analysis);
+  now += 86400001;
+  await rows(analysis);
+  assert.equal(provider.mock.callCount(), 4);
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM reports").get().n, 1);
+});
+
+test("simultaneous reports share a claim and incomplete reports release it without caching partial text", async t => {
+  const worker = (await getWorker()).default;
+  const {env, db} = await reportEnv(t);
+  let controller;
+  const provider = t.mock.method(globalThis, "fetch", async () => new Response(new ReadableStream({
+    start(output) { controller = output; },
+  })));
+  const first = await worker.fetch(post(analysis), env);
+  assert.equal((await worker.fetch(post(analysis), env)).status, 409);
+  assert.equal(db.prepare("SELECT used FROM counters WHERE bucket LIKE 'day:%'").get().used, 1);
+  controller.enqueue(new TextEncoder().encode('data: {"type":"response.output_text.delta","delta":"partial"}\n\n'));
+  controller.close();
+  assert.deepEqual((await first.text()).trim().split("\n").map(JSON.parse).map(x => x.type), ["delta", "error"]);
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM reports").get().n, 0);
+  provider.mock.mockImplementation(() => reportReply());
+  const retry = await worker.fetch(post(analysis), env);
+  assert.deepEqual((await retry.text()).trim().split("\n").map(JSON.parse).map(x => x.type), ["delta", "done"]);
+  assert.equal(provider.mock.callCount(), 2);
+});

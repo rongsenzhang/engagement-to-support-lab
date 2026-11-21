@@ -47,6 +47,24 @@ test('the study uses fifty unique invented cases and a genuinely equal-total pat
   assert.notDeepEqual(plain(data.cases[0].weeks), plain(data.cases[1].weeks));
   assert.match(data.provenance, /not measured model results/);
 });
+test('fictional practice names appear with the same synthetic IDs in cards and selections', () => {
+  const app = load();
+  const names = app.data.cases.map(item => item.student_name);
+  assert.equal(new Set(names).size, 50);
+  app.render(app.host);
+  assert.ok(app.host.innerHTML.includes(app.data.course_title));
+  app.click('begin');
+  for (const item of app.data.cases.slice(0, 2)) {
+    assert.ok(app.host.innerHTML.includes(item.id + ' · SYNTHETIC'));
+    assert.ok(app.host.innerHTML.includes('<h4>' + item.student_name + '</h4>'));
+  }
+  app.click('open-task', { studyTask: 'capacity' });
+  for (const item of app.data.cases) {
+    assert.ok(app.host.innerHTML.includes('data-study-select="' + item.id + '"'));
+    assert.ok(app.host.innerHTML.includes(item.student_name + '<span class="cell-sub">' + item.id));
+  }
+});
+
 test('weekly charts share a scale across cases within a task', () => {
   const app = load();
   const charts = () => [...app.host.innerHTML.matchAll(/<article class="study-case">([\s\S]*?)<\/article>/g)]

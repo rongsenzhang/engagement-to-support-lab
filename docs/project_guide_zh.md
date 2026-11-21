@@ -25,6 +25,10 @@ python3 run_demo.py
 
 ## 在导师复核队列中使用实时聊天
 
+打开一条记录后，点 **Generate AI analysis** 才会用 GPT‑6.2 Sol 生成这位学生的英文报告。查看、切换学生和切换评分方法都不会自动发起模型请求。报告列出观察到的证据、如何理解当前分数、仍缺的信息，以及导师可以先核实的问题。展开 **Discuss this record with AI** 可以用中文追问。
+
+历史记录使用虚构展示姓名。课程展示名选自真实的 Open University 课程目录，用作演示情境；原始数据仅公开模块代号。学生或课程的展示名称不参与模型计算。资源类别点击数、访问的不同资源数、单日最高活动和作业截止／提交时间均来自原始记录。点击量无法衡量学习质量。
+
 手机或电脑打开[云端复核队列](https://engagement-to-support-chat.rongsenzhang-common-hours-8c01a2fc7d8b.workers.dev/#queue)，选择记录，展开 **Discuss this record with AI**。可以先问“这条记录的哪些变化值得导师核实？”，再追问依据。切换记录或模型会开始新对话。网页访客无需安装软件或填写密钥。
 
 项目所有者只需在 Cloudflare 的 **Workers & Pages → engagement-to-support-chat → Settings → Variables and Secrets** 添加一项，类型选 **Secret**，名称填 `OPENAI_API_KEY`，值填自己的 key，然后点 **Deploy**。网页请求由云端处理，关掉个人电脑后仍可使用。公开 Demo 共用项目所有者的 OpenAI 额度，每小时每个公网 IP 最多发送 10 个问题，全站每天最多 100 个问题（UTC）。

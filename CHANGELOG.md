@@ -4,6 +4,11 @@ Versions identify this independent research prototype, not Kortext Stream releas
 
 ## Unreleased
 
+- Added an opt-in GPT-6.2 Sol analysis to individual queue records, with evidence,
+  score interpretation, missing context and a proposed tutor check.
+- Added fictional learner names, illustrative OU course titles and new day-28
+  detail on resource use, peak activity and dated assessment records.
+
 - Added streaming AI chat to each review-queue record on phones and computers.
   The hosted service sends day-28 evidence for the selected model, supports
   follow-ups and enforces daily and hourly request limits. The local launcher

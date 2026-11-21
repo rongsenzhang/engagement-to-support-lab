@@ -1,7 +1,19 @@
 /* Invented teaching scenarios. No row is an OULAD record or a fitted prediction. */
 (function () {
   'use strict';
-  const cases = Array.from({ length: 50 }, (_, i) => {
+  const practiceNames = [
+    'Maya Okafor', 'Oliver Hewitt', 'Amina Bashir', 'Ethan McBride', 'Chloe Barrett',
+    'Hassan Mirza', 'Nina Serrano', 'Tom Ellwood', 'Priya Nair', 'Freya MacLeod',
+    'Lena Vogel', 'Adam Byrne', 'Zoe Alvarez', 'Isla Kendrick', 'Omar Salim',
+    'Ruby Sinclair', 'Dylan Marsh', 'Ella Sutton', 'Josh Atkinson', 'Noor Rahman',
+    'Lily Beaumont', 'Hugo Mercer', 'Mei Lau', 'Lucas Carvalho', 'Sofia Conti',
+    'Grace Dalton', 'Samir Haddad', 'Eve Rowland', 'Theo Ashton', 'Helen Abbott',
+    'Leila Mansour', 'Daniel Connolly', 'Sara Mahmood', 'Finn O’Neill', 'Alice Cotton',
+    'Yuna Choi', 'Ravi Desai', 'Imani Mensah', 'Noah Briggs', 'Clara Willis',
+    'Ben Oakes', 'Elena Moraru', 'Mia Goodwin', 'Jamie Morton', 'Iris Leung',
+    'Jonah Francis', 'Amara Diallo', 'Leo Benton', 'Rosa Santos', 'Harriet Cross'
+  ];
+  const cases = practiceNames.map((name, i) => {
     const number = i + 1;
     const weeks = [18 + (number * 13) % 85, 12 + (number * 19) % 79,
       9 + (number * 7) % 71, 3 + (number * 11) % 67];
@@ -13,7 +25,7 @@
     const activeDays = 1 + number % Math.min(7 - recency, weeks[3]);
     return {
       id: 'SYN-' + String(number).padStart(3, '0'),
-      title: 'Invented learner ' + String(number).padStart(2, '0'),
+      student_name: name,
       weeks, active_days_recent: activeDays, days_since_activity: recency,
       assessments_due: due, submissions_recorded: recorded,
       illustrative_index: 25 + (number * 17) % 71,
@@ -21,17 +33,17 @@
       context: 'The platform record does not describe all learning. Check the local timetable, record freshness and the learner’s account before interpreting it.'
     };
   });
-  Object.assign(cases[0], { title: 'Learner A', weeks: [50, 50, 50, 50],
+  Object.assign(cases[0], { weeks: [50, 50, 50, 50],
     active_days_recent: 5, days_since_activity: 1, assessments_due: 1, submissions_recorded: 1,
     illustrative_index: 32 });
-  Object.assign(cases[1], { title: 'Learner B', weeks: [110, 60, 25, 5],
+  Object.assign(cases[1], { weeks: [110, 60, 25, 5],
     active_days_recent: 1, days_since_activity: 6, assessments_due: 1, submissions_recorded: 1,
     illustrative_index: 68 });
-  Object.assign(cases[2], { title: 'Submission not recorded', weeks: [40, 42, 36, 30],
+  Object.assign(cases[2], { scenario_label: 'Submission not recorded', weeks: [40, 42, 36, 30],
     active_days_recent: 4, days_since_activity: 2, assessments_due: 1, submissions_recorded: 0,
     illustrative_index: 74,
     context: 'Hypothetical new information: an authorised extension moves this deadline from day 28 to day 35. The learner also reports working offline on the assignment. Neither fact was included in the original platform record. Confirm the extension and record update before treating this as a missed deadline.' });
-  Object.assign(cases[3], { title: 'An illustrative false alarm', weeks: [60, 20, 8, 2],
+  Object.assign(cases[3], { scenario_label: 'An illustrative false alarm', weeks: [60, 20, 8, 2],
     active_days_recent: 1, days_since_activity: 6, assessments_due: 1, submissions_recorded: 0,
     illustrative_index: 88, illustrative_probability: 0.72,
     hypothetical_outcome: 'In this invented scenario, the learner did not withdraw from the module.',
@@ -53,6 +65,7 @@
   window.LAB_STUDY_CASES = {
     schema_version: 1, task_set_version: 'synthetic-tutor-tasks-1',
     provenance: 'All 50 cases, indices, probabilities and outcomes are deliberately invented for interface practice. They are not measured model results.',
+    course_title: 'Technologies in practice',
     cases, tasks
   };
 })();

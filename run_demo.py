@@ -12,7 +12,7 @@ import threading
 import warnings
 import webbrowser
 
-from src.tutor_chat import ChatError, DEFAULT_MODEL, MAX_REQUEST_BYTES, stream_reply, validate_request
+from src.tutor_chat import ChatError, DEFAULT_MODEL, LocalReports, MAX_REQUEST_BYTES, stream_reply, validate_request
 
 
 class DemoHandler(http.server.SimpleHTTPRequestHandler):
@@ -81,24 +81,45 @@ class DemoHandler(http.server.SimpleHTTPRequestHandler):
             return self.json_reply(400, {"error": "Check the record, selected model and question length."})
         except OSError:
             return self.json_reply(503, {"error": "The local evidence could not be read."})
-        self.send_response(200)
-        self.send_header("Content-Type", "application/x-ndjson; charset=utf-8")
-        self.send_header("Cache-Control", "no-store")
-        self.send_header("X-Content-Type-Options", "nosniff")
-        self.send_header("Connection", "close")
-        self.end_headers()
-        self.close_connection = True
-        events = stream_reply(self.server.api_key, self.server.api_model, evidence, messages)
+        key = None
+        cached = ""
+        if messages is None:
+            key, cached = self.server.reports.reserve(record, model, evidence)
+            if cached is None:
+                return self.json_reply(409, {"error": "This analysis is being generated. Try again shortly."})
+        complete = ""
         try:
+            self.send_response(200)
+            self.send_header("Content-Type", "application/x-ndjson; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.send_header("Connection", "close")
+            self.end_headers()
+            self.close_connection = True
+            if cached:
+                self.write_event({"type": "delta", "text": cached})
+                self.write_event({"type": "done"})
+                return
+            pieces = []
+            events = stream_reply(self.server.api_key, self.server.api_model, evidence, messages)
             try:
                 for event in events:
+                    if key and event["type"] == "delta":
+                        pieces.append(event["text"])
+                    if key and event["type"] == "done":
+                        complete = "".join(pieces)
+                        if not complete.strip():
+                            raise ChatError("The analysis was empty. Please try again.")
                     self.write_event(event)
-            except ChatError as err:
-                self.write_event({"type": "error", "message": str(err)})
+            finally:
+                events.close()
+        except ChatError as err:
+            self.write_event({"type": "error", "message": str(err)})
         except (BrokenPipeError, ConnectionResetError, TimeoutError):
             pass
         finally:
-            events.close()
+            if key and not cached:
+                self.server.reports.release(key, complete)
 
     def write_event(self, event):
         self.wfile.write((json.dumps(event, ensure_ascii=True) + "\n").encode())
@@ -110,6 +131,7 @@ def create_server(port, api_key=None, api_model=DEFAULT_MODEL):
     server = http.server.ThreadingHTTPServer(("127.0.0.1", port), handler)
     server.api_key = api_key
     server.api_model = api_model
+    server.reports = LocalReports()
     server.slots = threading.BoundedSemaphore(2)
     return server
 

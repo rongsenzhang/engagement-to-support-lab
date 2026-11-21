@@ -1,3 +1,31 @@
+.tutor-analysis {
+  min-width: 0;
+  margin-top: 18px;
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--teal);
+  border-radius: 5px;
+  background: white;
+  overflow-wrap: anywhere;
+}
+.tutor-analysis header { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+.tutor-analysis header h4 { font-size: 16px; }
+.tutor-analysis header span, .tutor-analysis-scope, .tutor-analysis-disclosure, .tutor-analysis-status {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.tutor-analysis-scope { margin-top: 3px; }
+.tutor-analysis-disclosure, .tutor-analysis-status { margin-top: 8px; }
+.tutor-analysis-results section { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+.tutor-analysis-results h5 { margin: 0 0 3px; color: var(--teal-dark); font-size: 13px; }
+.tutor-analysis-results p { font-size: 13px; line-height: 1.6; white-space: pre-line; }
+.tutor-analysis button { margin-top: 9px; }
+.tutor-analysis [hidden] { display: none !important; }
+.tutor-analysis button:focus-visible, .tutor-analysis h4:focus-visible, .tutor-ai-shortcuts button:focus-visible {
+  outline: 3px solid #217481;
+  outline-offset: 2px;
+}
 .tutor-chat {
   border: 1px solid var(--line);
   border-left: 3px solid var(--teal);
@@ -50,12 +78,15 @@
 .tutor-chat-turn { border-top: 1px solid var(--line); padding: 9px 0; }
 .tutor-chat-turn strong { color: var(--teal-dark); font-size: 12px; }
 .tutor-chat-turn p { white-space: pre-wrap; margin: 3px 0; font-size: 13px; }
-.tutor-chat-jump { display: none; }
+.tutor-ai-shortcuts { display: none; }
 @media (max-width: 900px) {
-  .tutor-chat-jump { display: block; min-height: 44px; margin: 8px 16px; }
+  .tutor-ai-shortcuts { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 16px; }
+  .tutor-ai-shortcuts button { min-height: 44px; max-width: 100%; white-space: normal; }
   #tutor-chat-slot { grid-column: 1 / -1; min-width: 0; }
 }
 @media (max-width: 640px) {
+  .tutor-analysis { padding: 12px; }
+  .tutor-analysis button { min-height: 44px; }
   .tutor-chat { min-width: 0; }
   .tutor-chat-body { padding: 12px; }
   .tutor-chat textarea { font-size: 16px; }
@@ -64,4 +95,4 @@
   .tutor-chat-status { flex-basis: 100%; overflow-wrap: anywhere; }
   .tutor-chat-replies { max-height: 45vh; }
 }
-@media print { .tutor-chat, .tutor-chat-jump { display: none; } }
+@media print { .tutor-chat, .tutor-ai-shortcuts, .tutor-analysis button { display: none; } }

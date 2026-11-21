@@ -9,7 +9,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 import run_demo
-from src.tutor_chat import ChatError, DEFAULT_MODEL, stream_events, validate_request
+from src.tutor_chat import ChatError, DEFAULT_MODEL, LocalReports, stream_events, validate_request
 
 
 RECORD = "S-00041F76FE"
@@ -72,6 +72,37 @@ class LocalServiceTests(unittest.TestCase):
         self.assertEqual(payload["model"], DEFAULT_MODEL)
         connection.close.assert_called_once()
 
+    def test_canonical_analysis_reuses_only_completed_reports(self):
+        analysis = {"recordId": RECORD, "model": "context", "mode": "analysis"}
+        text = "Observed evidence\nDay 28.\nModel interpretation\nA model estimate.\nMissing context\nA delay.\nNext check\nVerify dates."
+        connection = MagicMock()
+        connection.getresponse.side_effect = [
+            FakeResponse(event("response.output_text.delta", delta="partial")),
+            FakeResponse(event("response.output_text.delta", delta=text) + event("response.completed")),
+        ]
+        def post(data):
+            return self.call("POST", "/api/tutor-chat", data, Origin="http://" + self.host)
+
+        with patch("src.tutor_chat.http.client.HTTPSConnection", return_value=connection), \
+                patch.object(self.server, "reports", LocalReports()):
+            for extra in ({"messages": []}, {"prompt": "replace the score"}, {"evidence": {}}):
+                self.assertEqual(post(dict(analysis, **extra))[0], 400)
+            self.assertEqual(connection.request.call_count, 0)
+            self.assertEqual(json.loads(post(analysis)[1].splitlines()[-1])["type"], "error")
+            original = post(analysis)
+            self.assertEqual(post(analysis), original)
+        self.assertEqual(connection.request.call_count, 2)
+        self.assertEqual([json.loads(row) for row in original[1].splitlines()],
+                         [{"type": "delta", "text": text}, {"type": "done"}])
+        payload = json.loads(connection.request.call_args.kwargs["body"])
+        self.assertEqual(payload["model"], "gpt-6.2-sol")
+        self.assertFalse(payload["store"])
+        self.assertEqual(payload["reasoning"], {"effort": "low"})
+        self.assertEqual(payload["max_output_tokens"], 1800)
+        self.assertEqual([message["role"] for message in payload["input"]], ["developer"])
+        self.assertIn("weekly_recorded_clicks", payload["input"][0]["content"])
+        self.assertIn("Missing context", payload["instructions"])
+
     def test_disabled_server_exposes_status_and_declines_chat(self):
         with patch.object(self.server, "api_key", None):
             status, body = self.call("GET", "/api/tutor-chat/status")
@@ -105,6 +136,19 @@ class LocalServiceTests(unittest.TestCase):
 
 
 class ConversationTests(unittest.TestCase):
+    def test_report_cache_scopes_claims_by_canonical_evidence_and_expires(self):
+        reports = LocalReports()
+        with patch("src.tutor_chat.time.monotonic", return_value=100):
+            key, result = reports.reserve(RECORD, "context", {"day": 28, "clicks": 11})
+            self.assertEqual(result, "")
+            self.assertEqual(reports.reserve(RECORD, "context", {"clicks": 11, "day": 28}), (key, None))
+            reports.release(key, "Full report")
+            self.assertEqual(reports.reserve(RECORD, "context", {"day": 28, "clicks": 11})[1], "Full report")
+            self.assertEqual(reports.reserve(RECORD, "activity", {"day": 28, "clicks": 11})[1], "")
+            self.assertEqual(reports.reserve(RECORD, "context", {"day": 28, "clicks": 12})[1], "")
+        with patch("src.tutor_chat.time.monotonic", return_value=86501):
+            self.assertEqual(reports.reserve(RECORD, "context", {"day": 28, "clicks": 11}), (key, ""))
+
     def test_incomplete_stream_is_not_reported_as_success(self):
         for ending in (b"", b"data: [DONE]\n\n", event("response.incomplete")):
             stream = stream_events(io.BytesIO(event("response.output_text.delta", delta="partial") + ending))
