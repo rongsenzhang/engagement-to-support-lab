@@ -20,12 +20,12 @@ Kortext product, a Stream integration or a reproduction of its proprietary model
 
 | View | Purpose |
 |---|---|
-| Research question | Compare the historical activity model, contextual model and transparent reference rule at the same review workload; inspect successes and failures. |
-| Review queue | Inspect a record, compare models and export the review list. Select **Generate AI analysis** for an English tutor report on the selected record. Explore activity and assessment detail, then ask follow-up questions. |
+| Dashboard | View four weeks of cohort activity. Open a module’s review queue or expand the historical model comparison and research cases. |
+| Students | Filter and export the review list. Open a student profile to see the learning journey, resources and score details. The **AI & chat** tab offers an optional report and follow-up questions. |
 | Model evidence | Compare ranking, probability error, calibration and capacity trade-offs, with evaluation boundaries and aggregate error checks. |
 | Course robustness | Inspect within-course results, held-out courses, a course-prior baseline, a controlled nonlinear comparator and simulated late/missing records. |
 | Tutor practice | Work through four tasks using 50 fictional cases; save initial and revised judgements, select five records, pause tasks and export/restore a session. |
-| Sources & scope | Read the research rationale, public product diagnosis, data attribution and limits on interpretation. |
+| Sources | Read the research rationale, public product diagnosis, data attribution and limits on interpretation. |
 
 The browser uses precomputed research results and invented practice cases.
 The four tutor-practice tasks and session exports run locally in the browser.
@@ -58,7 +58,7 @@ v0.4. Publishing the website does not automatically create a release tag or ZIP.
 
 ### Ask about a review-queue record
 
-On a phone or computer, open the [hosted review queue](https://engagement-to-support-chat.rongsenzhang-common-hours-8c01a2fc7d8b.workers.dev/#queue), choose a learner and select **Generate AI analysis**. The GPT-6.2 Sol report explains observed activity, the selected scoring method, missing context and a next check. Opening a record or switching learners does not generate a report. A completed report can be reused for the same evidence and scoring method.
+On a phone or computer, open the [hosted review queue](https://engagement-to-support-chat.rongsenzhang-common-hours-8c01a2fc7d8b.workers.dev/#queue), choose a learner, open **AI & chat** and select **Generate AI analysis**. The GPT-6.2 Sol report explains observed activity, the selected scoring method, missing context and a next check. Opening a record or switching learners does not generate a report. A completed report can be reused for the same evidence and scoring method.
 
 Learner names are fictional. Real Open University course titles are assigned as examples to the anonymised module codes. The public enrolment alias and module code remain available for tracing the original evidence. Clicks by activity type, distinct resources accessed, peak activity day and dated assessment records are drawn from OULAD. The historical prediction and its fitted inputs are preserved.
 

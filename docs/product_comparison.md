@@ -60,3 +60,13 @@ The algorithm PDF reports headline accuracy and withdrawal-reduction claims [P02
 - **P02:** [The power of StREAM's engagement algorithm](https://kortext.com/stream/wp-content/uploads/2024/12/Stream-How-StREAM-by-Kortext-codified-engagement-A4-AW-HR.pdf), one-page official overview, accessed 2026-11-13. The URL contains `2024/12`; no publication date is inferred beyond that path. The document is a high-level vendor account, not source code or a fully specified evaluation.
 
 For company background, current releases, official recruitment duties and competitor sources, see [company_research_v0.2.md](company_research_v0.2.md).
+
+## Tutor interface review, 21 November 2026
+
+| Public interface evidence | How the lab uses it |
+|---|---|
+| The tutor feature overview describes cohort filtering, headline student data, resource use and a learning journey. [Kortext features](https://kortext.com/stream/features/) | Dashboard links each module to a filtered student list. A profile brings together weekly clicks, resource and assessment records, the chosen review score and optional AI analysis. |
+| The illustrated Stream 5.1 guide shows a purple top menu, student summary, section tabs and a labelled activity timeline. [Essex student guide](https://www.essex.ac.uk/-/media/documents/directories/academic-section/leap-user-guide.pdf) | The lab uses its own navigation, styling and charts. All four weekly points represent recorded OULAD activity. Model probabilities and the fixed reference index keep their original units. |
+| The August 2026 release shows course filtering and recorded interactions. [Stream 5.1 release](https://kortext.com/stream/blog/kortext-stream-5-1-helping-student-support-teams-act-faster-and-work-smarter/) | The module selector exposes the five available course codes and illustrative titles. Support exercises stay in the separate synthetic practice area. |
+
+Kortext provides a public product animation and accepts bookings for a full demonstration. This review used public screens and documentation. [Product animation](https://vimeo.com/1064775853) · [Demo booking](https://kortext.com/stream/book-a-demo/)

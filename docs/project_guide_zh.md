@@ -25,11 +25,11 @@ python3 run_demo.py
 
 ## 在导师复核队列中使用实时聊天
 
-打开一条记录后，点 **Generate AI analysis** 才会用 GPT‑6.2 Sol 生成这位学生的英文报告。查看、切换学生和切换评分方法都不会自动发起模型请求。报告列出观察到的证据、如何理解当前分数、仍缺的信息，以及导师可以先核实的问题。展开 **Discuss this record with AI** 可以用中文追问。
+在 **Students** 选中学生，进入 **AI & chat**，点 **Generate AI analysis** 才会用 GPT‑6.2 Sol 生成这位学生的英文报告。查看、切换学生和切换评分方法都不会自动发起模型请求。报告列出观察到的证据、如何理解当前分数、仍缺的信息，以及导师可以先核实的问题。展开 **Discuss this record with AI** 可以用中文追问。
 
 历史记录使用虚构展示姓名。课程展示名选自真实的 Open University 课程目录，用作演示情境；原始数据仅公开模块代号。学生或课程的展示名称不参与模型计算。资源类别点击数、访问的不同资源数、单日最高活动和作业截止／提交时间均来自原始记录。点击量无法衡量学习质量。
 
-手机或电脑打开[云端复核队列](https://engagement-to-support-chat.rongsenzhang-common-hours-8c01a2fc7d8b.workers.dev/#queue)，选择记录，展开 **Discuss this record with AI**。可以先问“这条记录的哪些变化值得导师核实？”，再追问依据。切换记录或模型会开始新对话。网页访客无需安装软件或填写密钥。
+手机或电脑打开[云端复核队列](https://engagement-to-support-chat.rongsenzhang-common-hours-8c01a2fc7d8b.workers.dev/#queue)，选择学生，进入 **AI & chat**，展开 **Discuss this record with AI**。可以先问“这条记录的哪些变化值得导师核实？”，再追问依据。切换记录或模型会开始新对话。网页访客无需安装软件或填写密钥。
 
 项目所有者只需在 Cloudflare 的 **Workers & Pages → engagement-to-support-chat → Settings → Variables and Secrets** 添加一项，类型选 **Secret**，名称填 `OPENAI_API_KEY`，值填自己的 key，然后点 **Deploy**。网页请求由云端处理，关掉个人电脑后仍可使用。公开 Demo 共用项目所有者的 OpenAI 额度，每小时每个公网 IP 最多发送 10 个问题，全站每天最多 100 个问题（UTC）。
 
@@ -46,7 +46,7 @@ python3 run_demo.py --chat
 密钥只在这次本地服务运行期间保存在内存里。若终端已设置 `OPENAI_API_KEY`，程序会直接使用它。
 密钥只在终端的密钥提示处输入，避免发到聊天、写进代码或粘贴到命令行。演示结束后按 Ctrl+C 关闭服务。
 
-打开 **Review queue**，选中一条记录，在记录下方提问，例如“这条记录有哪些迹象值得核实？
+打开 **Students**，选中一条记录，在 **AI & chat** 中提问，例如“这条记录有哪些迹象值得核实？
 如果提交数据晚到了，我应该先查什么？”回答会逐步显示，可以围绕同一记录继续追问。
 每次发送时，聊天服务会把问题、最近几轮对话和该条公开记录第 28 天可见的证据发送给 OpenAI，
 按你的 API 项目计费。只使用 Demo 的公开案例，提问时避免填写真实学生信息或私密试用笔记。
@@ -80,7 +80,7 @@ v0.4 的案例和分数全部编造并明确标记。软件测试、自己练习
 
 ## 怎样演示
 
-1. Research question：说明研究问题和原始同等工作量比较。
+1. 从 **Dashboard** 看四周学习活动，点击一门课程进入 **Students**。选中学生后，依次查看 **Learning journey**、**Resources** 和 **Score details**。手机上可用 **Back to students** 返回名单。回到首页，展开 **Historical model comparison and research cases** 可查看原始的同等工作量比较。
 2. Course robustness：看全体结果，再选 EEE 或 GGG，说明课程之间并不一致。
 3. Held-out courses：看平均结果与单门课程，比较排序指标和概率误差。
 4. Simulated delays：选择 Submission events，查看 60 条提交记录延迟如何替换
