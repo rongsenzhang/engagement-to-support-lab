@@ -433,3 +433,15 @@ test('follow-up can refer to this completed analysis; it drops from history afte
   await submit(another, 'What evidence?');
   assert.equal(JSON.parse(h.posts.at(-1).body).messages.length, 1);
 });
+
+test('a tutor can generate a report midway through a conversation and immediately ask about it', async () => {
+  const h = harness([() => complete('Review the schedule.'), () => complete(report), () => complete('There is a deadline.')]);
+  const panel = await h.select();
+  await submit(panel, 'What can I check?');
+  await pressReport(h.analysis);
+  await submit(panel, 'Why did the report mention offline study?');
+  const messages = JSON.parse(h.posts.at(-1).body).messages;
+  assert.equal(messages[0].content, 'What can I check?');
+  assert.deepEqual(messages[3], {role: 'assistant', content: report});
+  assert.equal(messages.at(-1).content, 'Why did the report mention offline study?');
+});

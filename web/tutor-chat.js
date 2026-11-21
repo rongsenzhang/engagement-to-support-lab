@@ -276,6 +276,7 @@
     const status = find('.tutor-chat-status');
     const lifetime = new AbortController();
     const history = [];
+    let discussedReport = false;
     let active = null;
     let service = null;
     let checking = false;
@@ -367,7 +368,7 @@
       addTurn('You', prompt);
       const reply = addTurn('AI response', '');
       const userMessage = {role: 'user', content: prompt};
-      const starter = history.length ? [] : analysis.conversationStarter();
+      const starter = discussedReport ? [] : analysis.conversationStarter();
       let timedOut = false;
       const timer = setTimeout(() => { timedOut = true; control.abort(); }, 125000);
       question.value = '';
@@ -375,7 +376,7 @@
         const response = await fetch(service.endpoint, {
           method: 'POST', mode: service.mode, credentials: 'omit', redirect: 'error',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({recordId, model, messages: [...starter, ...history, userMessage]}),
+          body: JSON.stringify({recordId, model, messages: [...history, ...starter, userMessage]}),
           signal: control.signal
         });
         await readReply(response, delta => {
@@ -388,7 +389,8 @@
         if (control.signal.aborted) throw new Error('Reply stopped.');
         if (!reply.text.textContent.trim()) throw new Error('The model returned an empty answer. Please try again.');
         history.push(...starter, userMessage, {role: 'assistant', content: reply.text.textContent.slice(0, 8000)});
-        if (history.length > 6) history.splice(0, 2);
+        if (starter.length) discussedReport = true;
+        if (history.length > 6) history.splice(0, history.length - 6);
         status.textContent = 'Reply complete.';
       } catch (error) {
         if (lifetime.signal.aborted) return;
