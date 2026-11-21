@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parent
 OUT = ROOT / "dist" / "cloud-assets"
 STATIC_FILES = (
     "index.html", "styles.css", "robustness.css", "study.css", "tutor-chat.css",
+    "workspace.css", "overview.css", "queue.css", "workspace-nav.js",
     "data.js", "reference-data.js", "robustness-data.js", "robustness.js",
     "record-context-data.js", "demo-identities.js", "study-data.js", "study.js", "tutor-chat.js", "app.js",
 )

@@ -1,4 +1,5 @@
-"""Public source downloads must not include local credentials or Workers state."""
+"""Check the public browser assets and the contents of source downloads."""
+from html.parser import HTMLParser
 import tempfile
 import unittest
 from pathlib import Path
@@ -6,9 +7,27 @@ from unittest.mock import patch
 from zipfile import ZipFile
 
 import package_demo
+import build_cloud
 
 
 class CloudPackageTest(unittest.TestCase):
+    def test_cloud_stages_every_script_and_stylesheet_linked_from_the_page(self):
+        class PageAssets(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.paths = set()
+
+            def handle_starttag(self, tag, attrs):
+                attrs = dict(attrs)
+                if tag == "script" and "src" in attrs:
+                    self.paths.add(attrs["src"])
+                elif tag == "link" and attrs.get("rel") == "stylesheet":
+                    self.paths.add(attrs["href"])
+
+        assets = PageAssets()
+        assets.feed((build_cloud.ROOT / "web" / "index.html").read_text(encoding="utf-8"))
+        self.assertFalse(assets.paths.difference(build_cloud.STATIC_FILES))
+
     def test_source_zip_excludes_nested_cloud_secrets_and_local_state(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

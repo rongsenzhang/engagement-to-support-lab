@@ -29,6 +29,8 @@ function element(extra = {}) {
     focus() {}, remove() {},
     closest(selector) {
       if (selector.startsWith('#')) return this.id === selector.slice(1) ? this : null;
+      if (selector === '[data-overview-module]') return this.dataset.overviewModule ? this : null;
+      if (selector === '[data-profile-tab]') return this.dataset.profileTab ? this : null;
       const match = selector.match(/^\[data-(case|model|student)\]$/);
       return match && this.dataset[match[1]] !== undefined ? this : null;
     },
@@ -146,6 +148,25 @@ test('overview presents all three actual workload results with exploratory limit
   assert.match(a.html, /already inspected in the original experiment/);
   assert.match(a.html, /does not show prevented withdrawals/);
   assert.equal(a.navigation.find(n => n.dataset.view === 'overview').attributes['aria-current'], 'page');
+});
+
+test('cohort dashboard summarises all day-28 records and opens the matching module queue', () => {
+  const a = app();
+  const students = a.window.LAB_DATA.students;
+  const weekly = [0, 1, 2, 3].map(i => students.reduce((total, s) => total + s.weeks[i], 0) / students.length);
+  weekly.forEach((mean, i) => assert.ok(a.html.includes(`Week ${i + 1}: ${mean.toFixed(1)} Clicks per enrolment`)));
+  const week4 = students.filter(s => s.weeks[3] > 0).length;
+  assert.ok(a.html.includes(`<dt>Active in week 4</dt><dd>${week4.toLocaleString('en-GB')}</dd>`));
+  const due = students.filter(s => s.signals.overdue_count > 0).length;
+  assert.ok(a.html.includes(`<dt>Due work with no submission record</dt><dd>${due.toLocaleString('en-GB')}</dd>`));
+  a.click('overviewModule', 'FFF');
+  a.route('queue');
+  assert.match((a.html.match(/<option value="FFF"[^>]*>/) || [])[0] || '', /selected/);
+  a.route('overview');
+  a.click('overviewModule', 'all');
+  a.route('queue');
+  assert.doesNotMatch(a.html, /<option value="FFF" selected/);
+  assert.ok(a.html.includes(students.length.toLocaleString('en-GB')));
 });
 
 test('routes render and navigation exposes exactly one current view', () => {
@@ -376,4 +397,35 @@ test('queue contextual details match the selected day-28 record and fitted facto
   assert.match(ui.html, /Show [1-9] more model factors/);
   ui.change('module-select', 'EEE');
   assert.match(ui.html, /No tutor- or computer-marked assessment was due by day 28/);
+});
+
+
+test('profile tabs keep the mounted record and work with keyboard navigation', () => {
+  let mounts = 0;
+  const ui = app({hash: '#queue', chatUI: { mount() { mounts++; }, close() {} }});
+  ui.click('profileTab', 'score');
+  assert.equal(ui.nodes.get('profile-panel-score').hidden, false);
+  assert.equal(ui.nodes.get('profile-tab-score').attributes['aria-selected'], 'true');
+  const event = {
+    target: element({dataset: {profileTab: 'score'}}), key: 'End',
+    preventDefault() { this.prevented = true; }
+  };
+  ui.main.listeners.keydown(event);
+  assert.equal(event.prevented, true);
+  assert.equal(ui.nodes.get('profile-panel-tools').hidden, false);
+  assert.equal(ui.nodes.get('profile-panel-score').hidden, true);
+  assert.equal(ui.nodes.get('profile-tab-tools').tabIndex, 0);
+  assert.equal(mounts, 1);
+});
+
+test('on a phone selecting a student opens the profile and Back restores the roster', () => {
+  const ui = app({hash: '#queue'});
+  ui.window.matchMedia = () => ({matches: true});
+  const ids = [...ui.html.matchAll(/<tr data-student="([^"]+)"/g)].map(match => match[1]);
+  ui.click('student', ids[1]);
+  assert.match(ui.html, /class="queue-view queue-show-profile"/);
+  assert.ok(ui.html.includes('Record ' + ids[1] + ' ·'));
+  ui.click('#return-to-roster');
+  assert.doesNotMatch(ui.html, /class="queue-view queue-show-profile"/);
+  assert.ok(ui.html.includes('Record ' + ids[1] + ' ·'));
 });

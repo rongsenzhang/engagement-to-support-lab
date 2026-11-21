@@ -110,7 +110,110 @@
   function productDiagnosis() {
     return `<section class="diagnosis-panel" aria-labelledby="diagnosis-heading"><div><div class="small-label">PUBLIC PRODUCT EVIDENCE → OUR RESEARCH QUESTION</div><h3 id="diagnosis-heading">What this contributes to the KTP brief</h3><p>The <a href="https://iuk-ktp.org.uk/job/ktp-associate-data-scientist-engagement-analytics/" target="_blank" rel="noopener noreferrer">published role</a> connects diagnosis of Stream 1.0 with a research-led Stream 2.0 framework. This independent project practises that research-to-model process; our v0.4 is not a Stream release.</p></div><div class="diagnosis-grid"><div><span class="evidence-type">Public product fact</span><p>Kortext already describes engagement summaries, alerts, interventions and referrals. Those capabilities alone are not our proposed novelty.</p><a href="https://kortext.com/stream/features/" target="_blank" rel="noopener noreferrer">Kortext features ↗</a></div><div><span class="evidence-type hypothesis">Hypothesis to investigate</span><p>Does assessment context add useful information within a course, or does the pooled improvement mainly reflect differences between courses? The course-robustness analysis examines both module differences and held-out modules.</p><a href="#robustness">Inspect course robustness →</a></div><div><span class="evidence-type unknown">Unknown from public evidence</span><p>Proprietary weights, training data and institution-specific thresholds are unavailable. R is our explicit reference rule; no commercial-system parity or superiority has been established.</p><a href="${repoDocs}product_comparison.md" target="_blank" rel="noopener noreferrer">Source-linked product comparison ↗</a></div></div></section>`;
   }
+  function cohortSnapshot() {
+    const weeklyClicks = [0, 0, 0, 0];
+    const weeklyActive = [0, 0, 0, 0];
+    const courses = new Map(modules.map(code => [code, {total: 0, active: 0}]));
+    let dueWithoutSubmission = 0;
+    for (const enrolment of students) {
+      const course = courses.get(enrolment.module);
+      course.total++;
+      if (enrolment.weeks[3] > 0) course.active++;
+      if (enrolment.signals.overdue_count > 0) dueWithoutSubmission++;
+      enrolment.weeks.forEach((clicks, week) => {
+        weeklyClicks[week] += clicks;
+        if (clicks > 0) weeklyActive[week]++;
+      });
+    }
+    return {weeklyClicks, weeklyActive, courses, dueWithoutSubmission};
+  }
+
+  function weeklyOverviewPlot(values, ceiling, unit, mode) {
+    const heights = values.map(value => 100 * value / ceiling);
+    const points = heights.map((height, week) => `${week * 100 / 3},${100 - height}`).join(' ');
+    const axisLabel = value => mode === 'active' ? value + '%' : num(value);
+    const pointLabel = value => value.toFixed(1) + (mode === 'active' ? '%' : '');
+    return `<figure class="ov-plot ov-plot-${mode}">
+      <figcaption>${esc(unit)}</figcaption>
+      <div class="ov-chart-body">
+        <div class="ov-axis" aria-hidden="true">${[1, .75, .5, .25, 0].map(tick => `<span>${axisLabel(tick * ceiling)}</span>`).join('')}</div>
+        <div class="ov-graph">
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+            <polygon points="0,100 ${points} 100,100" class="ov-area"/>
+            <polyline points="${points}" class="ov-line" vector-effect="non-scaling-stroke"/>
+          </svg>
+          ${heights.map((height, i) => `<span class="ov-point ov-point-${i}" style="left:${i * 100 / 3}%;bottom:${height}%" aria-hidden="true"><b>${pointLabel(values[i])}</b></span>`).join('')}
+        </div>
+        <div class="ov-weeks" aria-hidden="true"><span>Week 1</span><span>Week 2</span><span>Week 3</span><span>Week 4</span></div>
+      </div>
+      <ol class="sr-only">${values.map((v, i) => `<li>Week ${i + 1}: ${pointLabel(v)} ${esc(unit)}</li>`).join('')}</ol>
+    </figure>`;
+  }
+
+  function cohortActivity(snapshot) {
+    const means = snapshot.weeklyClicks.map(total => students.length ? total / students.length : 0);
+    const active = snapshot.weeklyActive.map(count => students.length ? count * 100 / students.length : 0);
+    const ceiling = Math.max(20, Math.ceil(Math.max(...means) / 20) * 20);
+    return `<section class="ov-panel ov-chart" aria-labelledby="ov-activity-title">
+      <div class="ov-panel-heading"><h3 id="ov-activity-title">Weekly activity</h3>
+        <p>Learning-platform activity across all ${num(students.length)} enrolments.</p></div>
+      <fieldset class="ov-series"><legend class="sr-only">Weekly activity measure</legend>
+        <input type="radio" id="ov-series-clicks" name="ov-activity" checked><label for="ov-series-clicks">Average clicks</label>
+        <input type="radio" id="ov-series-active" name="ov-activity"><label for="ov-series-active">Active enrolments</label>
+        ${weeklyOverviewPlot(means, ceiling, 'Clicks per enrolment', 'clicks')}
+        ${weeklyOverviewPlot(active, 100, 'Enrolments with recorded activity', 'active')}
+      </fieldset>
+    </section>`;
+  }
+
+  function cohortModules(courses) {
+    const rows = [...courses].map(([code, stats]) => {
+      const title = identities?.courses[code]?.title || 'Module ' + code;
+      const share = stats.active / stats.total;
+      return `<li><a href="#queue" data-overview-module="${esc(code)}" aria-label="Open ${esc(title)} review queue, module ${esc(code)}, ${pct(share, 0)} active in week 4">
+        <span class="ov-module-title">${esc(title)}</span><span class="ov-module-percent">${pct(share, 0)}</span>
+        <span class="ov-module-code">${esc(code)}</span><span class="ov-module-track" aria-hidden="true"><i style="width:${share * 100}%"></i></span>
+        <span class="ov-module-arrow" aria-hidden="true">›</span></a></li>`;
+    });
+    return `<section class="ov-panel ov-modules" aria-labelledby="ov-modules-title">
+      <div class="ov-panel-heading"><h3 id="ov-modules-title">Activity by module</h3><p>Enrolments with recorded clicks in week 4.</p></div>
+      <ul>${rows.join('')}</ul><p class="ov-module-note">Course titles are illustrative.</p></section>`;
+  }
+
   function renderOverview() {
+    const snapshot = cohortSnapshot();
+    const cutoff = meta.cutoff_day || 28;
+    const intake = [...new Set(students.map(s => s.presentation))].join(', ');
+    const cards = [
+      ['Module enrolments', students.length, `Across ${num(modules.length)} modules`],
+      ['Active in week 4', snapshot.weeklyActive[3], 'At least one recorded click'],
+      ['Due work with no submission record', snapshot.dueWithoutSubmission, 'Enrolments with at least one such assessment'],
+      ['Review queue', countFor(students.length), `Highest-ranked ${state.capacity}% of enrolments`]
+    ];
+    const historyOpen = main.querySelector?.('.ov-history')?.open;
+    return `<section class="ov-dashboard" aria-labelledby="ov-title">
+      <header class="ov-header"><div><h2 id="ov-title">Cohort overview</h2><p>OULAD · ${esc(intake)} cohort · Days 1–${num(cutoff)}</p></div>
+        <a class="ov-queue-button" href="#queue" data-overview-module="all">Open review queue <span aria-hidden="true">→</span></a></header>
+      <dl class="ov-stats">${cards.map(([title, value, text]) => `<div><dt>${title}</dt><dd>${num(value)}</dd><dd class="ov-stat-note">${text}</dd></div>`).join('')}</dl>
+      <div class="ov-workspace">${cohortActivity(snapshot)}${cohortModules(snapshot.courses)}</div>
+    </section><details class="ov-history"${historyOpen ? ' open' : ''}><summary>Historical model comparison and research cases</summary>
+      <div class="ov-history-content">${historicalComparison()}</div></details>`;
+  }
+
+  function selectOverviewModule(event) {
+    const link = event.target.closest('[data-overview-module]');
+    if (!link) return false;
+    const code = link.dataset.overviewModule;
+    if (code !== 'all' && !modules.includes(code)) return false;
+    state.module = code;
+    state.selected = null;
+    state.shown = 25;
+    state.reveal = false;
+    resetProfileView();
+    return true;
+  }
+
+  function historicalComparison() {
     const a = capacityAtTen(models.find(m => m.id === 'activity'));
     const c = capacityAtTen(models.find(m => m.id === 'context'));
     const delta = c && a ? c.tp - a.tp : null;
@@ -160,11 +263,125 @@
       ${deadlines ? `<ul class="evidence-list">${deadlines}</ul>` : '<p>No tutor- or computer-marked assessment was due by day 28.</p>'}
       <p class="fine-print">These details help a tutor interpret the record. Clicks count interactions. Time spent studying and learning quality are unknown.</p></section>`;
   }
-  function detail(s) {if(!s)return '<div class="empty-state">No records match this selection.</div>';const x=s.signals||{};return `<div class="panel-body"><div class="detail-heading"><div><div class="small-label">RECORD IN FOCUS</div><h3 class="detail-id">${esc(studentLabel(s))}</h3><p class="detail-meta">Record ${esc(s.id)} · ${esc(s.presentation)}<br>${esc(courseLabel(s.module))} ${identities?.courses[s.module] ? `· <a href="${esc(identities.courses[s.module].url)}" target="_blank" rel="noopener noreferrer">OU example course ↗</a>` : ''}</p></div><span class="tag teal">Day ${meta.cutoff_day||28}</span></div><div class="risk-box"><div class="risk-number">${scoreText(s)}</div><div class="risk-caption">${model().kind==='index'?'Transparent review index':model().kind==='rule'?'Elapsed time since observed activity':'Estimated subsequent module withdrawal risk'}<small>${esc(model().label)}${model().kind!=='logistic'?' · ranking score, not a probability':' · historical model estimate'}</small></div></div><div id="tutor-chat-slot"></div><section class="detail-section"><div class="detail-section-title"><h4>Learning activity over time</h4><span>Recorded VLE clicks</span></div>${weeklyChart(s)}<div class="mini-stats"><div class="mini-stat"><strong>${num(x.active_days_7)}<span class="sr-only"> of seven</span><small style="font-size:11px;font-weight:400"> / 7</small></strong><span>Active days<br>latest week</span></div><div class="mini-stat"><strong>${n(x.no_activity)?'—':num(x.days_since_last)}</strong><span>Days since<br>last activity</span></div><div class="mini-stat"><strong>${num(x.overdue_count)}<small style="font-size:11px;font-weight:400"> / ${num(x.due_count)}</small></strong><span>Due assessments<br>without submission</span></div></div></section>${recordContextSection(s.id)}<section class="detail-section"><div class="detail-section-title"><h4>Observed evidence</h4><span>Available at the snapshot</span></div><ul class="evidence-list">${rawEvidence(s).map(t=>`<li>${esc(t)}</li>`).join('')}</ul><div class="context-notice">Check offline study, access issues, extensions and course arrangements with the student. These records do not measure motivation or wellbeing.</div></section><section class="detail-section contributions-section"><div class="detail-section-title"><h4>What influences this estimate?</h4></div>${contributions(s)}</section><div class="conversation-card"><div class="small-label">A STARTING POINT FOR A CONVERSATION</div><p>${esc(enquiry(s))}</p><small>Rule-based enquiry prompt for a tutor to review. No message is sent and no support decision is automated.</small></div>${state.reveal?`<div class="detail-outcome"><strong>Retrospective outcome: ${n(s.outcome)?'subsequently withdrew from this module':'no subsequent module withdrawal recorded'}</strong>This later outcome is used for evaluation only. It was not an input to the prediction.</div>`:''}</div>`;}
-  function queueRows(queue) {return queue.slice(0,state.shown).map((s,i)=>`<tr data-student="${esc(s.id)}" class="${state.selected===s.id?'selected':''}"><td>${String(i+1).padStart(2,'0')}</td><td><button class="student-link" data-student="${esc(s.id)}" aria-label="Inspect ${esc(studentLabel(s))}, record ${esc(s.id)}, ${esc(courseLabel(s.module))}">${esc(studentLabel(s))}</button><span class="cell-sub">${esc(courseLabel(s.module))}</span><span class="cell-sub">${esc(s.id)}</span></td><td><span class="score-value">${scoreText(s)}</span><span class="score-track" aria-hidden="true"><i style="width:${Math.min(100,Math.max(0,score(s)/(model().kind==='index'?100:model().kind==='rule'?28:1)*100))}%"></i></span></td><td class="spark-cell">${sparkline(s.weeks)}</td><td class="signal-cell">${signalBadge(s)}</td>${state.reveal?`<td><span class="outcome-badge ${n(s.outcome)?'withdrawn':''}">${n(s.outcome)?'Withdrew':'No withdrawal'}</span></td>`:''}</tr>`).join('');}
-  function renderQueue() {const {all,k,queue}=queueState();if(!queue.some(s=>s.id===state.selected))state.selected=queue[0]?.id;const s=queue.find(s=>s.id===state.selected);const metrics=metricsFor(all,queue);return `<div class="section-heading"><div><h2>Who merits a closer look?</h2><p>Review a capacity-limited list using only evidence available at day ${meta.cutoff_day||28}. Tutors decide what to check next.</p><p class="fine-print">Student names are fictional. We assigned example Open University course titles to the anonymised module codes. OULAD withholds the original names and course titles.</p></div><span class="tag">HISTORICAL DEMO</span></div><div class="toolbar"><div class="control"><label for="model-select">Indicator model</label><select id="model-select">${modelOptions()}</select></div><div class="control"><label for="module-select">Module</label><select id="module-select"><option value="all">All held-out modules</option>${modules.map(m=>`<option value="${esc(m)}" ${state.module===m?'selected':''}>${esc(courseLabel(m))}</option>`).join('')}</select></div><div class="control capacity-control"><div class="capacity-top"><label class="control-label" for="capacity-input">Review capacity</label><output id="capacity-output" for="capacity-input">${state.capacity}% · ${num(k)} records</output></div><input id="capacity-input" type="range" min="5" max="50" step="5" value="${state.capacity}" aria-valuetext="${state.capacity} percent, ${k} records"><div class="range-labels"><span>5% of selected cohort</span><span>50%</span></div></div></div><div class="stats-row"><div class="stat-card"><div class="stat-number">${num(all.length)}</div><div><div class="stat-label">Eligible records</div><div class="stat-description">${esc(selectedLabel())}</div></div></div><div class="stat-card accent"><div class="stat-number">${num(k)}</div><div><div class="stat-label">Records to review</div><div class="stat-description">Highest-ranked ${state.capacity}%</div></div></div><div class="stat-card"><div class="stat-number">${meta.cutoff_day||28}</div><div><div class="stat-label">Observation day</div><div class="stat-description">Later events excluded from features</div></div></div></div><div class="retrospective-control"><label class="toggle-label" for="reveal-outcomes"><input id="reveal-outcomes" type="checkbox" ${state.reveal?'checked':''}>Reveal later outcomes for retrospective evaluation</label><span>Hidden by default to preserve the tutor’s day-${meta.cutoff_day||28} view.</span></div>${state.reveal?`<div class="retrospective-results"><div><div class="retrospective-title">Historical check · ${esc(selectedLabel())}</div><small>${num(metrics.positives)} later module withdrawals in this cohort</small></div><div><strong>${pct(metrics.precision,1)}</strong><span>Precision: selected records that withdrew</span></div><div><strong>${pct(metrics.recall,1)}</strong><span>Recall: later withdrawals covered</span></div><div><strong>${num(metrics.fp)}</strong><span>Selected records without later withdrawal</span></div></div>`:''}<div class="workspace-grid"><section class="panel"><div class="panel-head"><div><h3>Support review queue</h3><p>${model().kind==='index'?'Ranked by the transparent R index, from 0 to 100; this is not a probability.':model().kind==='rule'?'Ranked by inactivity days; no probability is estimated.':'Ranked by estimated subsequent module withdrawal risk.'}</p></div><button class="quiet-button" id="export-queue">Export CSV <span aria-hidden="true">↓</span></button></div><div class="table-scroll"><table class="queue-table"><thead><tr><th scope="col">#</th><th scope="col">Record</th><th scope="col">${model().kind==='index'?'Index / 100':model().kind==='rule'?'Inactivity':'Estimate'}</th><th class="spark-cell" scope="col" title="Each sparkline uses its own scale; inspect a record for click totals.">4-week pattern</th><th class="signal-cell" scope="col">Observed signal</th>${state.reveal?'<th scope="col">Later outcome</th>':''}</tr></thead><tbody>${queueRows(queue)}</tbody></table></div><div class="queue-footer"><span>Showing ${num(Math.min(state.shown,queue.length))} of ${num(queue.length)} ranked records</span>${state.shown<queue.length?'<button class="quiet-button" id="load-more">Show 25 more</button>':'<span>Complete selected queue</span>'}</div></section><aside class="panel detail-panel" aria-label="Selected student record">${detail(s)}</aside></div><p class="section-note">The target is withdrawal from a particular module after day ${meta.cutoff_day||28}. A high score does not establish a cause, a wellbeing condition, or who would benefit most from an intervention. Sparklines show the shape of each record’s activity on individual scales.</p>`;}
-  function calibrationChart(m) {const rows=(m.calibration||[]).filter(r=>r.mean_pred!=null&&r.observed!=null);if(m.kind!=='logistic'||!rows.length)return `<div class="chart-empty"><strong>Probability calibration: not applicable.</strong><span>${m.kind==='index'?'R is a 0–100 review index.':'Inactivity is a ranking score measured in days.'}<br>Neither score is a withdrawal probability. Select A, B or C to inspect probability calibration.</span></div>`;const x=v=>46+n(v)*280;const y=v=>219-n(v)*183;const grid=[0,.25,.5,.75,1].map(t=>`<line x1="46" y1="${y(t)}" x2="326" y2="${y(t)}" stroke="#e5ebe4"/><text x="37" y="${y(t)+3}" text-anchor="end" font-size="9" fill="#71827b">${pct(t,0)}</text><text x="${x(t)}" y="237" text-anchor="middle" font-size="9" fill="#71827b">${pct(t,0)}</text>`).join('');const points=rows.map(r=>`${x(r.mean_pred)},${y(r.observed)}`).join(' ');return `<svg class="calibration-chart" viewBox="0 0 365 267" role="img" aria-label="Calibration plot comparing predicted probability with observed withdrawal frequency">${grid}<line x1="46" y1="219" x2="326" y2="36" stroke="#9ba9a5" stroke-width="1.5" stroke-dasharray="4 4"/><polyline points="${points}" fill="none" stroke="#087e77" stroke-width="2.5"/>${rows.map(r=>`<circle cx="${x(r.mean_pred)}" cy="${y(r.observed)}" r="4" fill="#087e77" stroke="white" stroke-width="1.3"><title>Predicted ${pct(r.mean_pred)}, observed ${pct(r.observed)}; n=${num(r.n)}</title></circle>`).join('')}<text x="185" y="258" text-anchor="middle" font-size="10" fill="#61776c">Predicted probability</text><text x="15" y="128" text-anchor="middle" font-size="10" fill="#61776c" transform="rotate(-90 15 128)">Observed frequency</text></svg>`;}
-  function capacityChart(m) {const rows=(m.capacity||[]).slice().sort((a,b)=>n(a.percent)-n(b.percent));if(!rows.length)return '<div class="chart-empty">No capacity analysis was exported.</div>';const x=v=>45+(n(v)-5)/45*282;const y=v=>218-n(v)*182;const grid=[0,.25,.5,.75,1].map(t=>`<line x1="45" y1="${y(t)}" x2="327" y2="${y(t)}" stroke="#e5ebe4"/><text x="36" y="${y(t)+3}" text-anchor="end" font-size="9" fill="#71827b">${pct(t,0)}</text>`).join('');const lines=[['precision','#087e77'],['recall','#467998']].map(([key,color])=>`<polyline points="${rows.map(r=>`${x(r.percent)},${y(r[key])}`).join(' ')}" fill="none" stroke="${color}" stroke-width="2.5"/>${rows.map(r=>`<circle cx="${x(r.percent)}" cy="${y(r[key])}" r="3.4" fill="${color}" stroke="white" stroke-width="1"><title>${r.percent}% reviewed, ${pretty(key)} ${pct(r[key])}; ${num(r.k)} records</title></circle>`).join('')}`).join('');return `<svg class="capacity-chart" viewBox="0 0 365 267" role="img" aria-label="Precision and recall across review capacity from 5 to 50 percent">${grid}${lines}${[5,10,20,30,40,50].map(t=>`<text x="${x(t)}" y="237" text-anchor="middle" font-size="9" fill="#71827b">${t}%</text>`).join('')}<text x="186" y="258" text-anchor="middle" font-size="10" fill="#61776c">Share of the whole test cohort reviewed</text></svg>`;}
+  const profileTabs = [
+    ['journey', 'Learning journey'], ['resources', 'Resources'], ['score', 'Score details'], ['tools', 'AI & chat']
+  ];
+  const profileView = { tab: 'journey', mobile: false, returnY: 0 };
+  function resetProfileView() {
+    profileView.tab = 'journey';
+    profileView.mobile = false;
+    profileView.returnY = 0;
+  }
+  function activateProfileTab(key) {
+    if (!profileTabs.some(([id]) => id === key)) return;
+    profileView.tab = key;
+    for (const [id] of profileTabs) {
+      const active = id === key;
+      const tab = document.getElementById('profile-tab-' + id);
+      tab.setAttribute('aria-selected', String(active));
+      tab.tabIndex = active ? 0 : -1;
+      document.getElementById('profile-panel-' + id).hidden = !active;
+    }
+    document.getElementById('profile-tab-' + key).focus({preventScroll: true});
+  }
+  function journeyChart(s) {
+    const values = (s.weeks || []).map(n);
+    if (values.length !== 4) return '<p>Weekly activity data unavailable.</p>';
+    const peak = Math.max(1, ...values);
+    const interval = peak < 8 ? 1 : 10 ** Math.floor(Math.log10(peak / 2));
+    const middle = Math.max(1, Math.ceil(peak / (2 * interval)) * interval);
+    const ticks = [0, middle, middle * 2];
+    const x = i => 48 + i * 126;
+    const y = clicks => 121 - clicks / (middle * 2) * 95;
+    const points = values.map((v, i) => x(i) + ',' + y(v)).join(' ');
+    return `<svg class="journey-plot" viewBox="0 0 463 151" role="img" aria-label="Recorded VLE clicks in weeks one to four: ${esc(values.join(', '))}">
+      ${ticks.map(tick => `<line x1="40" x2="439" y1="${y(tick)}" y2="${y(tick)}" class="journey-guide"/><text x="32" y="${y(tick)+3}" text-anchor="end">${num(tick)}</text>`).join('')}
+      <polygon points="48,121 ${points} 426,121" class="journey-shade"/>
+      <polyline points="${points}" class="journey-line"/>
+      ${values.map((v,i) => `<circle cx="${x(i)}" cy="${y(v)}" r="4.2" class="journey-point"><title>Week ${i+1}: ${num(v)} clicks</title></circle><text x="${x(i)}" y="${y(v)-9}" text-anchor="middle" class="journey-value">${num(v)}</text><text x="${x(i)}" y="144" text-anchor="middle">Week ${i+1}</text>`).join('')}
+    </svg>`;
+  }
+  function detail(s) {
+    if (!s) return '<p class="empty-state">No records match this selection.</p>';
+    const x = s.signals || {};
+    const rankLabel = model().kind === 'index' ? 'Transparent review index' : model().kind === 'rule'
+      ? 'Elapsed time since observed activity' : 'Estimated subsequent module withdrawal risk';
+    const initials = studentLabel(s).split(' ').map(word => word[0]).slice(0,2).join('');
+    const panes = {
+      journey: `<div class="profile-section-heading"><h4>Learning journey</h4><span>Recorded VLE clicks</span></div>
+        ${journeyChart(s)}
+        <dl class="profile-measures">
+          <div><dt>Active days in week 4</dt><dd>${num(x.active_days_7)} <small>/ 7</small></dd></div>
+          <div><dt>Days since last activity</dt><dd>${n(x.no_activity)?'—':num(x.days_since_last)}</dd></div>
+          <div><dt>Due without submission</dt><dd>${num(x.overdue_count)} <small>/ ${num(x.due_count)}</small></dd></div>
+        </dl>
+        <div class="profile-section-heading"><h4>Observed evidence</h4></div>
+        <ul class="evidence-list">${rawEvidence(s).map(t=>`<li>${esc(t)}</li>`).join('')}</ul>
+        <p class="profile-footnote">Check offline study, access, extensions and course arrangements with the student. Clicks cannot measure motivation or wellbeing.</p>`,
+      resources: recordContextSection(s.id) || '<p>Resource and assessment details are unavailable for this record.</p>',
+      score: `<div class="profile-section-heading"><h4>What influences this estimate?</h4></div>
+        ${contributions(s)}`,
+      tools: `<div id="tutor-chat-slot"></div>
+        <div class="profile-prompt"><h4>Conversation starter</h4><p>${esc(enquiry(s))}</p><small>Rule-based prompt for a tutor to review. No message is sent.</small></div>`
+    };
+    return `<div class="profile-heading">
+      <button type="button" class="roster-return quiet-button" id="return-to-roster">← Back to students</button>
+      <div class="profile-identity"><span class="profile-avatar" aria-hidden="true">${esc(initials)}</span>
+        <div><h3 class="detail-id">${esc(studentLabel(s))}</h3><p>${esc(courseLabel(s.module))}</p></div>
+      </div>
+      <p class="profile-subline">Record ${esc(s.id)} · ${esc(s.presentation)}${identities?.courses[s.module] ? ` · <a href="${esc(identities.courses[s.module].url)}" target="_blank" rel="noopener noreferrer">Example course ↗</a>` : ''}</p>
+      <div class="profile-score"><strong>${scoreText(s)}</strong><div>${esc(rankLabel)}<small>${esc(model().label)} · ${model().kind==='logistic'?'historical model estimate':'ranking score, not a probability'}</small></div></div>
+    </div>
+    <div class="profile-tabs" role="tablist" aria-label="Student profile">
+      ${profileTabs.map(([id,label]) => `<button type="button" role="tab" id="profile-tab-${id}" aria-selected="${id===profileView.tab}" aria-controls="profile-panel-${id}" data-profile-tab="${id}" tabindex="${id===profileView.tab?0:-1}">${esc(label)}</button>`).join('')}
+    </div>
+    ${profileTabs.map(([id])=>`<section class="profile-pane" role="tabpanel" id="profile-panel-${id}" aria-labelledby="profile-tab-${id}" tabindex="0" ${profileView.tab===id?'':'hidden'}>${panes[id]}</section>`).join('')}
+    ${state.reveal?`<div class="detail-outcome"><strong>Retrospective outcome: ${n(s.outcome)?'subsequently withdrew from this module':'no subsequent module withdrawal recorded'}</strong>This later outcome is used for evaluation only. It was not an input to the prediction.</div>`:''}`;
+  }
+  function queueRows(queue) {
+    return queue.slice(0,state.shown).map((s,i)=>`<tr data-student="${esc(s.id)}" class="${state.selected===s.id?'selected':''}">
+      <td class="roster-rank">${num(i+1)}</td>
+      <td class="roster-student"><button type="button" class="student-link" data-student="${esc(s.id)}" aria-current="${s.id===state.selected?'true':'false'}" aria-label="Inspect ${esc(studentLabel(s))}, record ${esc(s.id)}, ${esc(courseLabel(s.module))}">${esc(studentLabel(s))}</button>
+        <span class="cell-sub">${esc(courseLabel(s.module))}</span></td>
+      <td class="roster-score"><strong>${scoreText(s)}</strong></td>
+      <td class="roster-trend">${sparkline(s.weeks)}</td>
+      <td class="roster-signal">${signalBadge(s)}</td>
+      ${state.reveal?`<td><span class="outcome-badge ${n(s.outcome)?'withdrawn':''}">${n(s.outcome)?'Withdrew':'No withdrawal'}</span></td>`:''}</tr>`).join('');
+  }
+  function renderQueue() {
+    const {all,k,queue} = queueState();
+    if (!queue.some(s=>s.id===state.selected)) {
+      state.selected = queue[0]?.id;
+      resetProfileView();
+    }
+    const student = queue.find(s=>s.id===state.selected);
+    const metrics = metricsFor(all,queue);
+    const method = model().kind==='index'?'Ranked by the transparent R index, from 0 to 100; this is not a probability.':model().kind==='rule'?'Ranked by days since recorded activity.':'Ranked by estimated subsequent module withdrawal risk.';
+    return `<div class="queue-view${profileView.mobile?' queue-show-profile':''}">
+      <div class="queue-page-heading"><div><h2>Student review queue</h2><p>${num(k)} records to review from ${num(all.length)} eligible enrolments · Day ${meta.cutoff_day||28}</p></div><button class="quiet-button" id="export-queue">Export CSV <span aria-hidden="true">↓</span></button></div>
+      <div class="queue-filters">
+        <div class="control"><label for="module-select">Module</label><select id="module-select"><option value="all">All held-out modules</option>${modules.map(m=>`<option value="${esc(m)}" ${state.module===m?'selected':''}>${esc(courseLabel(m))}</option>`).join('')}</select></div>
+        <div class="control"><label for="model-select">Indicator model</label><select id="model-select">${modelOptions()}</select></div>
+        <div class="control queue-capacity"><div class="capacity-top"><label for="capacity-input">Review capacity</label><output id="capacity-output" for="capacity-input">${state.capacity}% · ${num(k)} records</output></div><input id="capacity-input" type="range" min="5" max="50" step="5" value="${state.capacity}" aria-valuetext="${state.capacity} percent, ${k} records"><div class="range-labels"><span>5%</span><span>50%</span></div></div>
+      </div>
+      <div class="queue-evaluation"><label for="reveal-outcomes"><input id="reveal-outcomes" type="checkbox" ${state.reveal?'checked':''}> Show later outcomes</label><span>Retrospective evaluation only</span></div>
+      ${state.reveal?`<div class="retrospective-results"><div><div class="retrospective-title">Historical check · ${esc(selectedLabel())}</div><small>${num(metrics.positives)} later module withdrawals</small></div><div><strong>${pct(metrics.precision,1)}</strong><span>Precision</span></div><div><strong>${pct(metrics.recall,1)}</strong><span>Recall</span></div><div><strong>${num(metrics.fp)}</strong><span>Selected records without later withdrawal</span></div></div>`:''}
+      <div class="queue-workspace workspace-grid">
+        <section class="roster-card" aria-label="Student list">
+          <div class="roster-heading panel-head"><h3>Students <span>${num(k)}</span></h3><p>${method}</p></div>
+          <div class="roster-scroll" id="roster-scroll" role="region" aria-label="Ranked student records" tabindex="0"><table class="student-roster">
+            <thead><tr><th class="roster-rank" scope="col">#</th><th scope="col">Student</th><th scope="col">${model().kind==='index'?'Index / 100':model().kind==='rule'?'Inactivity':'Estimate'}</th><th class="roster-trend" scope="col" title="Weekly clicks, scaled separately for each student">Activity</th><th class="roster-signal" scope="col">Signal</th>${state.reveal?'<th scope="col">Later outcome</th>':''}</tr></thead><tbody>${queueRows(queue)}</tbody>
+          </table></div>
+          <div class="roster-footer"><span>${num(Math.min(state.shown,queue.length))} of ${num(queue.length)} records</span>${state.shown<queue.length?'<button class="quiet-button" id="load-more">Show 25 more</button>':''}</div>
+        </section>
+        <section class="profile-card" id="student-profile" tabindex="-1" aria-label="Selected student record">${detail(student)}</section>
+      </div>
+      <details class="queue-data-note"><summary>About these records</summary>
+        <p>Student names are fictional. Course titles are illustrative examples from the Open University. OULAD withholds the original names and course titles. The research snapshot covers the first 28 days. Sparklines show weekly activity on individual scales.</p>
+        <p>The predicted outcome is withdrawal from one module after day 28. A score cannot establish a cause or predict who would benefit from an intervention.</p></details></div>`;
+  }
+  function calibrationChart(m) {const rows=(m.calibration||[]).filter(r=>r.mean_pred!=null&&r.observed!=null);if(m.kind!=='logistic'||!rows.length)return `<div class="chart-empty"><strong>Probability calibration: not applicable.</strong><span>${m.kind==='index'?'R is a 0–100 review index.':'Inactivity is a ranking score measured in days.'}<br>Neither score is a withdrawal probability. Select A, B or C to inspect probability calibration.</span></div>`;const x=v=>46+n(v)*280;const y=v=>219-n(v)*183;const grid=[0,.25,.5,.75,1].map(t=>`<line x1="46" y1="${y(t)}" x2="326" y2="${y(t)}" stroke="#e1e4ea"/><text x="37" y="${y(t)+3}" text-anchor="end" font-size="9" fill="#50596a">${pct(t,0)}</text><text x="${x(t)}" y="237" text-anchor="middle" font-size="9" fill="#50596a">${pct(t,0)}</text>`).join('');const points=rows.map(r=>`${x(r.mean_pred)},${y(r.observed)}`).join(' ');return `<svg class="calibration-chart" viewBox="0 0 365 267" role="img" aria-label="Calibration plot comparing predicted probability with observed withdrawal frequency">${grid}<line x1="46" y1="219" x2="326" y2="36" stroke="#9ba9a5" stroke-width="1.5" stroke-dasharray="4 4"/><polyline points="${points}" fill="none" stroke="#6841a2" stroke-width="2.5"/>${rows.map(r=>`<circle cx="${x(r.mean_pred)}" cy="${y(r.observed)}" r="4" fill="#6841a2" stroke="white" stroke-width="1.3"><title>Predicted ${pct(r.mean_pred)}, observed ${pct(r.observed)}; n=${num(r.n)}</title></circle>`).join('')}<text x="185" y="258" text-anchor="middle" font-size="10" fill="#50596a">Predicted probability</text><text x="15" y="128" text-anchor="middle" font-size="10" fill="#50596a" transform="rotate(-90 15 128)">Observed frequency</text></svg>`;}
+  function capacityChart(m) {const rows=(m.capacity||[]).slice().sort((a,b)=>n(a.percent)-n(b.percent));if(!rows.length)return '<div class="chart-empty">No capacity analysis was exported.</div>';const x=v=>45+(n(v)-5)/45*282;const y=v=>218-n(v)*182;const grid=[0,.25,.5,.75,1].map(t=>`<line x1="45" y1="${y(t)}" x2="327" y2="${y(t)}" stroke="#e1e4ea"/><text x="36" y="${y(t)+3}" text-anchor="end" font-size="9" fill="#50596a">${pct(t,0)}</text>`).join('');const lines=[['precision','#6841a2'],['recall','#236d98']].map(([key,color])=>`<polyline points="${rows.map(r=>`${x(r.percent)},${y(r[key])}`).join(' ')}" fill="none" stroke="${color}" stroke-width="2.5"/>${rows.map(r=>`<circle cx="${x(r.percent)}" cy="${y(r[key])}" r="3.4" fill="${color}" stroke="white" stroke-width="1"><title>${r.percent}% reviewed, ${pretty(key)} ${pct(r[key])}; ${num(r.k)} records</title></circle>`).join('')}`).join('');return `<svg class="capacity-chart" viewBox="0 0 365 267" role="img" aria-label="Precision and recall across review capacity from 5 to 50 percent">${grid}${lines}${[5,10,20,30,40,50].map(t=>`<text x="${x(t)}" y="237" text-anchor="middle" font-size="9" fill="#50596a">${t}%</text>`).join('')}<text x="186" y="258" text-anchor="middle" font-size="10" fill="#50596a">Share of the whole test cohort reviewed</text></svg>`;}
   function splits() {return ['train','validation','test'].map(key=>{const s=meta.splits?.[key]||{};return `<div class="split-card ${key==='test'?'test':''}"><div class="split-name">${key==='train'?'Training':pretty(key)}</div><div class="split-number">${num(s.n)}</div><p>Eligible module records</p><p>${esc(words(s.presentations))}</p><p>${num(s.positives)} withdrawals · ${pct(s.prevalence,1)}</p></div>`;}).join('');}
   function checkEntries() {
     const c=D.checks||{};
@@ -183,12 +400,64 @@
   }
   function uncertaintyNote() {
     const u=D.uncertainty;if(!u||!Array.isArray(u.ci95_percentile))return '';
-    return `<section class="provenance"><h3>How certain is the added-context result?</h3><p>C minus A average precision: <strong>${dec(u.estimate,4)}</strong>. Exploratory student-bootstrap 95% interval: <strong>${dec(u.ci95_percentile[0],4)} to ${dec(u.ci95_percentile[1],4)}</strong>, from ${num(u.repetitions)} resamples.</p><p>${esc(u.note)} This comparison describes prediction; it does not measure the benefit of contacting a student.</p></section>`;
+    return `<section class="provenance"><h3>Uncertainty in the added-context comparison</h3><p>C minus A average precision: <strong>${dec(u.estimate,4)}</strong>. Exploratory student-bootstrap 95% interval: <strong>${dec(u.ci95_percentile[0],4)} to ${dec(u.ci95_percentile[1],4)}</strong>, from ${num(u.repetitions)} resamples.</p><p>${esc(u.note)} This comparison describes prediction; it does not measure the benefit of contacting a student.</p></section>`;
   }
-  function auditTable() {const rows=Array.isArray(D.audit)?D.audit:[];if(!rows.length)return '<p class="fine-print">No subgroup rows met the export criteria.</p>';return `<div class="table-scroll"><table class="audit-table"><thead><tr><th scope="col">Attribute / group</th><th scope="col">Records</th><th scope="col">Withdrawals</th><th scope="col">Recall</th><th scope="col">False-positive rate</th><th scope="col">Precision</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(pretty(r.attribute))} · ${esc(r.group)}</td><td>${num(r.n)}</td><td>${num(r.positives)}</td><td>${pct(r.recall)}</td><td>${pct(r.fpr)}</td><td>${pct(r.precision)}</td></tr>`).join('')}</tbody></table></div>`;}
-  function renderEvidence() {const m=model();return `<div class="section-heading"><div><h2>Test the indicators. Show the evidence.</h2><p>Retrospective results on the 2014J cohort, already inspected in the original experiment. The added R comparison is exploratory. Compare rankings, probability estimates and review workloads.</p></div><span class="tag teal">RETROSPECTIVE EVALUATION</span></div><div class="evidence-intro"><div><div class="small-label">THE RESEARCH QUESTION</div><h3>Do personal trends and assessment context add useful information?</h3><p>The three indicator models use the same modelling approach with progressively richer features. The inactivity rule and the independently specified R index provide fixed-rule benchmarks. R was added after the original experiment outcomes were inspected; it has not been tuned on these results.</p></div><div class="selected-model"><div class="small-label">CHOSEN USING VALIDATION DATA</div><strong>${esc(selectedModel.label)}</strong><small>The default was selected before inspecting the held-out test results. Selecting a row below explores other models; it does not change that selection record.</small></div></div><section class="panel"><div class="panel-head"><div><h3>Model comparison</h3><p>Whole test cohort · ${num(meta.splits?.test?.n||students.length)} records · click a model to inspect</p></div><span class="tag">${pct(meta.splits?.test?.prevalence,1)} outcome prevalence</span></div><div class="table-scroll"><table class="model-table"><thead><tr><th scope="col">Model / indicator set</th><th scope="col" title="Average precision summarises precision and recall across thresholds. Higher is better.">Average precision ↑</th><th scope="col" title="Area under the ROC curve. Higher is better.">ROC AUC ↑</th><th scope="col" title="Mean squared probability error. Lower is better.">Brier score ↓</th><th scope="col">Precision @ 10%</th><th scope="col">Recall @ 10%</th></tr></thead><tbody>${models.map(item=>`<tr class="${item.id===state.model?'chosen':''}"><td><button class="model-picker" data-model="${esc(item.id)}" aria-label="Inspect ${esc(item.label)}"><span class="model-name">${esc(item.label)}</span>${item.id===defaultModel?'<span class="chosen-label">Default</span>':''}<div class="model-note">${esc(modelDescription(item))}</div></button></td><td>${dec(item.metrics?.average_precision)}</td><td>${dec(item.metrics?.roc_auc)}</td><td>${item.kind==='logistic'?dec(item.metrics?.brier):'<span title="Not a probability model">N/A</span>'}</td><td>${pct(item.metrics?.precision_at_10pct)}</td><td>${pct(item.metrics?.recall_at_10pct)}</td></tr>`).join('')}</tbody></table></div></section><p class="section-note">At 10% capacity, precision is the share of selected records with a later module withdrawal; recall is the share of all later withdrawals included in that list. These figures measure prediction, not prevented withdrawals or intervention benefit. The inactivity rule and R index have no Brier score or probability calibration because neither estimates a probability. Their raw scores use different units and should not be compared directly.</p>${uncertaintyNote()}<div class="two-column"><section class="panel chart-panel"><div class="panel-head"><div><h3>${m.kind==='logistic'?'Do the probabilities match?':'Is this score a probability?'}</h3><p>${esc(m.label)} · held-out calibration</p></div></div><div class="panel-body">${m.kind==='logistic'?'<div class="chart-legend"><span class="legend-key"><i></i>Observed in probability bins</span><span class="legend-key"><i class="dashed"></i>Perfect calibration</span></div>':''}${calibrationChart(m)}<p class="fine-print">${m.kind==='logistic'?'Each point groups records with similar estimated probabilities. Points away from the diagonal indicate over- or under-estimation. Small bins are less stable.':'Ranking scores can be evaluated for prioritisation without treating them as probabilities. Brier score and probability calibration are not applicable.'}</p></div></section><section class="panel chart-panel"><div class="panel-head"><div><h3>What can the team cover?</h3><p>${esc(m.label)} · fixed review capacity</p></div></div><div class="panel-body"><div class="chart-legend"><span class="legend-key"><i></i>Precision</span><span class="legend-key"><i class="blue"></i>Recall</span></div>${capacityChart(m)}<p class="fine-print">Reviewing more records usually covers more subsequent withdrawals, while changing the proportion of false alarms. Capacity is a workflow choice, not a treatment recommendation.</p></div></section></div><div class="validation-heading"><div><h3>How the evaluation is separated</h3><p>Train: 2013B+2013J; calibration and original A/B/C selection: 2014B; evaluation: 2014J. No student crosses these splits. The 2014J results are now known, so subsequent comparisons are exploratory. This is not a strict calendar-time deployment replay.</p></div></div><div class="split-grid">${splits()}</div><div class="checks-section"><h4>Automated data checks</h4><div class="checks-list">${checkEntries()||'See the reproducible pipeline checks in the project package.'}</div></div><details class="details-panel"><summary>Inspect aggregate subgroup error rates</summary><div class="panel-body"><p class="fine-print" style="margin-top:0;margin-bottom:12px">Fixed global top-10% list for <strong>${esc(selectedModel.label)}</strong>, regardless of the model currently selected above. Demographic fields are excluded from individual predictions and this interface’s student records. Rows with fewer than 100 records, 20 positives or 20 negatives are suppressed. Differences are descriptive; this is not a fairness certification.</p>${auditTable()}</div></details><details class="details-panel"><summary>What this prototype cannot establish</summary><div class="panel-body"><ul class="evidence-list">${(meta.limits||[]).map(t=>`<li>${esc(t)}</li>`).join('')}</ul><p class="fine-print">No comparison with Kortext’s proprietary algorithm has been performed. Real deployment would require current institutional data, prospective checks and stakeholder review.</p></div></details>`;}
-  function researchCard(r,i) {return `<article class="research-card"><div class="research-card-top"><div class="small-label">INDICATOR RATIONALE ${String(i+1).padStart(2,'0')}</div><h3>${esc(r.title||r.concept)}</h3><p>${esc(r.concept||'')}</p></div><div class="research-card-body"><div class="research-field"><strong>Observable signals</strong><p>${esc(words(r.signals))}</p></div><div class="research-field"><strong>Hypothesis to test</strong><p>${esc(r.hypothesis)}</p></div><div class="context-notice"><strong>Interpretation boundary</strong><br>${esc(words(r.limitations))}</div>${r.url?`<a class="source-link" href="${esc(safeUrl(r.url))}" target="_blank" rel="noopener noreferrer">${esc(r.source_title||'Read the source')} ↗</a>`:''}${r.status?`<p class="fine-print">${esc(r.status)}</p>`:''}</div></article>`;}
-  function renderResearch() {const research=Array.isArray(D.research)?D.research:[];return `<div class="section-heading"><div><h2>Make every indicator accountable.</h2><p>Connect the research idea to an observable signal, a testable hypothesis and an explicit limit on interpretation.</p></div><span class="tag">RESEARCH → PRACTICE</span></div>${productDiagnosis()}<div class="research-banner"><div class="research-step"><div class="step-number">01</div><h3>Define the construct</h3><p>Learning behaviour is observable. Motivation, belonging and wellbeing are not directly measured by click records.</p></div><div class="research-step"><div class="step-number">02</div><h3>Operationalise a signal</h3><p>Specify the observation window, calculation and missing-data behaviour before testing a prediction.</p></div><div class="research-step"><div class="step-number">03</div><h3>Evaluate its usefulness</h3><p>Compare indicator groups on a held-out cohort and examine the implications for a tutor’s review workload.</p></div></div><div class="research-grid">${research.map(researchCard).join('')||'<div class="provenance"><h3>Research notes are in the project package.</h3><p>Consult the indicator definitions and supporting sources before interpreting the model.</p></div>'}</div><div class="scope-grid"><section class="scope-card"><h3>What this prototype demonstrates</h3><ul><li>A reproducible path from public data to snapshot-safe indicators and an evaluated model.</li><li>Feature-group comparison, probability checks and capacity-aware retrospective evaluation.</li><li>A readable review queue with behavioural evidence and human enquiry prompts.</li><li>An explicit record of what can and cannot be concluded from the data.</li></ul></section><section class="scope-card future"><h3>What still needs real-world investigation</h3><ul><li>Whether these indicators transfer to current campus-based learning and different institutions.</li><li>Whether tutors understand the explanations and find the workflow useful.</li><li>Whether supportive follow-up changes outcomes, and for whom.</li><li>How extensions, offline study, access barriers and local course calendars should be represented.</li></ul></section></div><section class="provenance"><h3>Data provenance and scope</h3><p>${esc(meta.dataset||'Open University Learning Analytics Dataset (OULAD)')} · ${esc(meta.license||'CC BY 4.0')}. Historical, anonymised records from 2013–2014. The unit of analysis is a student’s enrolment in one module presentation; a module withdrawal does not necessarily mean leaving university.</p><p>Outcome: ${esc(meta.target||'subsequent module withdrawal among records still registered at day 28')}. All displayed learner evidence is restricted to the observation snapshot; subsequent outcomes are used only for retrospective evaluation.</p><p>Demographic data is used only in aggregate error inspection. The prototype does not diagnose wellbeing, estimate intervention effects, or reproduce Kortext’s proprietary system.</p><p><a href="${esc(safeUrl(meta.dataset_url||'https://archive.ics.uci.edu/dataset/349/open+university+learning+analytics+dataset'))}" target="_blank" rel="noopener noreferrer">Dataset and licence ↗</a></p><p><strong>Current application: v0.4.</strong> It combines historical model comparisons, course-robustness analyses and a separate synthetic tutor-practice module. Earlier experiment versions identify the source of the evidence, not an older application being served.</p><details class="details-panel"><summary>Research history and version sources</summary><div class="panel-body"><p>Original experiment: ${esc(meta.version||'v0.1')} · Reference index: v0.2.0 · Course-robustness analyses: v0.3.0 · Synthetic tutor practice: v0.4.0.</p><p>Earlier predictions and protocols remain unchanged so their results can be reproduced. The practice cases are invented and are not new model predictions.</p></div></details><p><a href="https://github.com/rongsenzhang/engagement-to-support-lab/releases/tag/v0.1.0" target="_blank" rel="noopener noreferrer">Original experiment archive ↗</a> · <a href="${repoDocs}company_research_v0.2.md" target="_blank" rel="noopener noreferrer">Company and competitor research ↗</a> · <a href="${repoDocs}product_comparison.md" target="_blank" rel="noopener noreferrer">Product evidence map ↗</a> · <a href="${repoDocs}protocol_v0.3.md" target="_blank" rel="noopener noreferrer">Course-comparison protocol ↗</a> · <a href="#robustness">Course robustness →</a></p></section>`;}
+  function auditTable() {const rows=Array.isArray(D.audit)?D.audit:[];if(!rows.length)return '<p class="fine-print">No subgroup rows met the export criteria.</p>';return `<div class="table-scroll" role="region" tabindex="0" aria-label="Subgroup error rates"><table class="audit-table"><thead><tr><th scope="col">Attribute / group</th><th scope="col">Records</th><th scope="col">Withdrawals</th><th scope="col">Recall</th><th scope="col">False-positive rate</th><th scope="col">Precision</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(pretty(r.attribute))} · ${esc(r.group)}</td><td>${num(r.n)}</td><td>${num(r.positives)}</td><td>${pct(r.recall)}</td><td>${pct(r.fpr)}</td><td>${pct(r.precision)}</td></tr>`).join('')}</tbody></table></div>`;}
+  function renderEvidence() {const m=model();return `<section class="evidence-view"><div class="section-heading"><div><h2>Model evidence</h2><p>Compare methods on the 2014J cohort and inspect the estimates at different review capacities.</p></div></div>
+    <section class="panel"><div class="panel-head"><div><h3>Model comparison</h3><p>Select a method to see its calibration and review capacity. The test cohort contains ${num(meta.splits?.test?.n||students.length)} records.</p></div><span class="tag">${pct(meta.splits?.test?.prevalence,1)} outcome prevalence</span></div><div class="table-scroll" role="region" tabindex="0" aria-label="Model comparison"><table class="model-table"><thead><tr><th scope="col">Model / indicator set</th><th scope="col" title="Average precision summarises precision and recall across thresholds. Higher is better.">Average precision ↑</th><th scope="col" title="Area under the ROC curve. Higher is better.">ROC AUC ↑</th><th scope="col" title="Mean squared probability error. Lower is better.">Brier score ↓</th><th scope="col">Precision @ 10%</th><th scope="col">Recall @ 10%</th></tr></thead><tbody>${models.map(item=>`<tr class="${item.id===state.model?'chosen':''}"><td><button class="model-picker" data-model="${esc(item.id)}" aria-label="Inspect ${esc(item.label)}"><span class="model-name">${esc(item.label)}</span>${item.id===defaultModel?'<span class="chosen-label">Default</span>':''}<div class="model-note">${esc(modelDescription(item))}</div></button></td><td>${dec(item.metrics?.average_precision)}</td><td>${dec(item.metrics?.roc_auc)}</td><td>${item.kind==='logistic'?dec(item.metrics?.brier):'<span title="Not a probability model">N/A</span>'}</td><td>${pct(item.metrics?.precision_at_10pct)}</td><td>${pct(item.metrics?.recall_at_10pct)}</td></tr>`).join('')}</tbody></table></div></section><section class="evidence-intro"><div><h3>Comparison design</h3><p>Models A, B and C use progressively richer indicators with the same modelling approach. Inactivity and the R index provide fixed-rule benchmarks. R was specified after the original test results were known. Its comparison is exploratory.</p></div><div class="selected-model"><small>Default model on validation data</small><strong>${esc(selectedModel.label)}</strong><small>Selected before inspection of the 2014J test cohort.</small></div></section>
+    <p class="section-note">At 10% capacity, precision is the share of selected records with a later module withdrawal; recall is the share of all later withdrawals included in that list. These figures measure prediction, not prevented withdrawals or intervention benefit. The inactivity rule and R index have no Brier score or probability calibration because neither estimates a probability. Their raw scores use different units and should not be compared directly.</p>${uncertaintyNote()}<div class="two-column"><section class="panel chart-panel"><div class="panel-head"><div><h3>${m.kind==='logistic'?'Probability calibration':'Score interpretation'}</h3><p>${esc(m.label)} · held-out calibration</p></div></div><div class="panel-body">${m.kind==='logistic'?'<div class="chart-legend"><span class="legend-key"><i></i>Observed in probability bins</span><span class="legend-key"><i class="dashed"></i>Perfect calibration</span></div>':''}${calibrationChart(m)}<p class="fine-print">${m.kind==='logistic'?'Each point groups records with similar estimated probabilities. Points away from the diagonal indicate over- or under-estimation. Small bins are less stable.':'Ranking scores can be evaluated for prioritisation without treating them as probabilities. Brier score and probability calibration are not applicable.'}</p></div></section><section class="panel chart-panel"><div class="panel-head"><div><h3>Precision and recall by capacity</h3><p>${esc(m.label)} · fixed review capacity</p></div></div><div class="panel-body"><div class="chart-legend"><span class="legend-key"><i></i>Precision</span><span class="legend-key"><i class="blue"></i>Recall</span></div>${capacityChart(m)}<p class="fine-print">Reviewing more records usually covers more subsequent withdrawals, while changing the proportion of false alarms. Capacity is a workflow choice, not a treatment recommendation.</p></div></section></div><div class="validation-heading"><div><h3>Evaluation cohorts</h3><p>Train: 2013B+2013J; calibration and original A/B/C selection: 2014B; evaluation: 2014J. No student crosses these splits. The 2014J results are now known, so subsequent comparisons are exploratory. This is not a strict calendar-time deployment replay.</p></div></div><div class="split-grid">${splits()}</div><div class="checks-section"><h4>Automated data checks</h4><div class="checks-list">${checkEntries()||'See the reproducible pipeline checks in the project package.'}</div></div><details class="details-panel"><summary>Inspect aggregate subgroup error rates</summary><div class="panel-body"><p class="fine-print" style="margin-top:0;margin-bottom:12px">Fixed global top-10% list for <strong>${esc(selectedModel.label)}</strong>, regardless of the model currently selected above. Demographic fields are excluded from individual predictions and this interface’s student records. Rows with fewer than 100 records, 20 positives or 20 negatives are suppressed. Differences are descriptive; this is not a fairness certification.</p>${auditTable()}</div></details><details class="details-panel"><summary>What this prototype cannot establish</summary><div class="panel-body"><ul class="evidence-list">${(meta.limits||[]).map(t=>`<li>${esc(t)}</li>`).join('')}</ul><p class="fine-print">No comparison with Kortext’s proprietary algorithm has been performed. Real deployment would require current institutional data, prospective checks and stakeholder review.</p></div></details></section>`;}
+  function researchCard(r) {
+    return `<article class="research-card">
+      <div class="research-card-top"><h3>${esc(r.title || r.concept)}</h3><p>${esc(r.concept || '')}</p></div>
+      <div class="research-card-body">
+        <div class="research-field"><strong>Observable signals</strong><p>${esc(words(r.signals))}</p></div>
+        <div class="research-field"><strong>Hypothesis to test</strong><p>${esc(r.hypothesis)}</p></div>
+        <div class="context-notice"><strong>Interpretation limits</strong><p>${esc(words(r.limitations))}</p></div>
+        ${r.url ? `<a class="source-link" href="${esc(safeUrl(r.url))}" target="_blank" rel="noopener noreferrer">${esc(r.source_title || 'Read the source')} ↗</a>` : ''}
+        ${r.status ? `<p class="fine-print">${esc(r.status)}</p>` : ''}
+      </div></article>`;
+  }
+
+  function renderResearch() {
+    const research = Array.isArray(D.research) ? D.research : [];
+    return `<section class="sources-view">
+      <div class="section-heading"><div><h2>Sources &amp; scope</h2><p>Dataset, indicator definitions and limits of the historical evaluation.</p></div></div>
+      <section class="provenance">
+        <h3>${esc(meta.dataset || 'Open University Learning Analytics Dataset (OULAD)')}</h3>
+        <p>These anonymised records describe individual enrolments in a module presentation during 2013–2014. The outcome is withdrawal from that module. A learner could continue at university.</p>
+        <dl class="source-facts">
+          <div><dt>Observation window</dt><dd>First ${num(meta.cutoff_day || 28)} days</dd></div>
+          <div><dt>Test cohort</dt><dd>2014J</dd></div>
+          <div><dt>Data licence</dt><dd>${esc(meta.license || 'CC BY 4.0')}</dd></div>
+        </dl>
+        <p><strong>Recorded outcome</strong> · ${esc(meta.target || 'subsequent module withdrawal among records still registered at day 28')}. Later outcomes are used only for retrospective evaluation. Demographic fields are used only in aggregate error analysis.</p>
+        <a class="source-link" href="${esc(safeUrl(meta.dataset_url || 'https://archive.ics.uci.edu/dataset/349/open+university+learning+analytics+dataset'))}" target="_blank" rel="noopener noreferrer">Open dataset and licence ↗</a>
+      </section>
+      <section class="source-method"><h3>How the indicators were defined</h3><ol>
+        <li><strong>Choose the behaviour.</strong> Platform records show activity. Motivation, belonging and wellbeing are unobserved.</li>
+        <li><strong>Define the measure.</strong> Set the observation window, calculation and treatment of missing data before testing.</li>
+        <li><strong>Evaluate the ranking.</strong> Compare indicator groups on a held-out cohort at a fixed tutor workload.</li>
+      </ol></section>
+      <div class="research-grid">${research.map(researchCard).join('') || '<div class="provenance"><h3>Indicator references</h3><p>Consult the project documentation for indicator definitions and supporting sources.</p></div>'}</div>
+      <div class="scope-grid">
+        <section class="scope-card"><h3>What the evidence covers</h3><ul>
+          <li>Reproducible day-28 indicators and predictions from the public data.</li><li>Feature comparisons, probability calibration and retrospective review capacity.</li><li>A tutor review queue that links records to observed learning activity and suggested checks.</li>
+        </ul></section>
+        <section class="scope-card future"><h3>Open research questions</h3><ul>
+          <li>Will these indicators transfer to current courses and other institutions?</li><li>Can tutors interpret the evidence and use it in their work?</li><li>Does supportive follow-up improve outcomes, and for whom?</li><li>How should extensions, offline study, access barriers and course calendars be represented?</li>
+        </ul></section>
+      </div>
+      ${productDiagnosis()}
+      <details class="details-panel source-archive"><summary>Research history and supporting documents</summary><div class="panel-body">
+        <p>The v0.4 application brings together the original ${esc(meta.version || 'v0.1')} experiment, the v0.2 reference index, the v0.3 course analyses and v0.4 tutor practice. Earlier predictions and protocols are preserved for reproduction. The practice exercises use invented cases.</p>
+        <p>The project evaluates historical rankings. Wellbeing, the effect of interventions and the performance of Kortext’s proprietary system are outside its scope.</p>
+        <ul><li><a href="https://github.com/rongsenzhang/engagement-to-support-lab/releases/tag/v0.1.0" target="_blank" rel="noopener noreferrer">Original experiment archive ↗</a></li>
+          <li><a href="${repoDocs}company_research_v0.2.md" target="_blank" rel="noopener noreferrer">Company and competitor research ↗</a></li>
+          <li><a href="${repoDocs}product_comparison.md" target="_blank" rel="noopener noreferrer">Product evidence map ↗</a></li>
+          <li><a href="${repoDocs}protocol_v0.3.md" target="_blank" rel="noopener noreferrer">Course-comparison protocol ↗</a></li>
+          <li><a href="#robustness">Course robustness results</a></li></ul>
+      </div></details></section>`;
+  }
   function render() {
     if (state.view !== 'queue') window.LAB_TUTOR_CHAT?.close();
     if (state.view === 'trial') {
@@ -207,9 +476,66 @@
     }
   }
   function exportQueue() {const {queue}=queueState();const headers=['display_alias','module','presentation','snapshot_day','model','score_unit','ranking_score','active_days_latest_7','days_since_last_activity','assessments_due','due_without_submission'];if(state.reveal)headers.push('later_module_withdrawal');const rows=queue.map(s=>{const x=s.signals||{};const row=[s.id,s.module,s.presentation,meta.cutoff_day||28,model().label,model().kind==='index'?'index_0_to_100':model().kind==='rule'?'days':'probability',score(s),x.active_days_7,n(x.no_activity)?'No activity recorded':x.days_since_last,x.due_count,x.overdue_count];if(state.reveal)row.push(n(s.outcome));return row;});const quote=v=>'"'+String(v??'').replace(/"/g,'""')+'"';const csv=[headers,...rows].map(row=>row.map(quote).join(',')).join('\r\n');const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`support_review_${state.module}_${state.model}_${state.capacity}pct${state.reveal?'_retrospective':''}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);announce(`Exported ${queue.length} review records${state.reveal?' with retrospective outcomes':''}.`);}
+  function showStudentProfile(target) {
+    const list = document.getElementById('roster-scroll');
+    const offset = list?.scrollTop || 0;
+    const useMobileView = window.matchMedia?.('(max-width: 860px)').matches === true;
+    const documentOffset = window.scrollY;
+    state.selected = target.dataset.student;
+    profileView.tab = 'journey';
+    profileView.mobile = useMobileView;
+    profileView.returnY = documentOffset;
+    render();
+    const newList = document.getElementById('roster-scroll');
+    if (newList) newList.scrollTop = offset;
+    if (useMobileView) {
+      const profile = document.getElementById('student-profile');
+      profile.focus({preventScroll:true});
+      profile.scrollIntoView?.({block:'start', behavior:'instant'});
+    } else {
+      window.scrollTo(0,documentOffset);
+      main.querySelectorAll('button[data-student]').forEach(button => {
+        if (button.dataset.student === state.selected) button.focus({preventScroll:true});
+      });
+    }
+    announce(`Inspecting ${studentLabel(studentById.get(state.selected))}.`);
+  }
+  function returnToRoster() {
+    profileView.mobile = false;
+    render();
+    const button = [...main.querySelectorAll('button[data-student]')].find(item => item.dataset.student===state.selected);
+    window.scrollTo({top:profileView.returnY,behavior:'instant'});
+    button?.focus({preventScroll:true});
+  }
+  // The existing roster shortcuts focus controls inside the AI tab. Reveal
+  // that tab before their focus and scroll handlers run on the button.
+  main.addEventListener('click', event => {
+    if (!event.target.closest('.tutor-ai-shortcuts button')) return;
+    profileView.mobile = true;
+    profileView.returnY = window.scrollY;
+    event.target.closest('.queue-view').classList.add('queue-show-profile');
+    activateProfileTab('tools');
+  }, true);
+  main.addEventListener('keydown', event => {
+    const tab = event.target.closest('[data-profile-tab]');
+    if (!tab) return;
+    const i = profileTabs.findIndex(([key]) => key === tab.dataset.profileTab);
+    const adjacent = {ArrowLeft:(i+profileTabs.length-1)%profileTabs.length,ArrowRight:(i+1)%profileTabs.length,Home:0,End:profileTabs.length-1};
+    if (!Object.hasOwn(adjacent,event.key)) return;
+    event.preventDefault();
+    activateProfileTab(profileTabs[adjacent[event.key]][0]);
+  });
   main.addEventListener('input',event=>{if(event.target.id==='capacity-input'){const value=n(event.target.value);const total=ordered().length;document.getElementById('capacity-output').textContent=`${value}% · ${num(Math.max(1,Math.ceil(total*value/100)))} records`;event.target.setAttribute('aria-valuetext',`${value} percent`);}});
   main.addEventListener('change',event=>{const target=event.target;if(target.id==='model-select'){state.model=target.value;state.shown=25;render();document.getElementById('model-select')?.focus();announce(`Model changed to ${model().label}.`);}else if(target.id==='module-select'){state.module=target.value;state.shown=25;render();document.getElementById('module-select')?.focus();announce(`Showing ${selectedLabel()}.`);}else if(target.id==='capacity-input'){state.capacity=n(target.value);state.shown=25;render();document.getElementById('capacity-input')?.focus();announce(`Reviewing the highest-ranked ${state.capacity} percent.`);}else if(target.id==='reveal-outcomes'){state.reveal=target.checked;render();document.getElementById('reveal-outcomes')?.focus();announce(state.reveal?'Later outcomes are now visible for retrospective evaluation.':'Later outcomes are hidden.');}});
-  main.addEventListener('click',event=>{if(event.target.closest('[data-rob-open-queue]')){state.model=defaultModel;state.module='all';state.capacity=10;state.selected=null;state.reveal=false;state.shown=25;return;}const caseButton=event.target.closest('[data-case]');if(caseButton){state.caseKind=caseButton.dataset.case;render();document.querySelector(`[data-case="${state.caseKind}"]`)?.focus({preventScroll:true});announce('Case selected. The historical outcome and all-model ranks are shown in the case detail.');return;}const modelButton=event.target.closest('[data-model]');if(modelButton){state.model=modelButton.dataset.model;render();document.querySelector(`[data-model="${state.model}"]`)?.focus();announce(`Inspecting ${model().label}.`);return;}const studentTarget=event.target.closest('[data-student]');if(studentTarget){state.selected=studentTarget.dataset.student;const scroll=window.scrollY;render();window.scrollTo(0,scroll);const selectedButton=[...main.querySelectorAll('button[data-student]')].find(b=>b.dataset.student===state.selected);if(event.target.tagName==='BUTTON')selectedButton?.focus({preventScroll:true});announce(`Inspecting record ${state.selected}.`);return;}if(event.target.closest('#load-more')){state.shown+=25;const scroll=window.scrollY;render();window.scrollTo(0,scroll);document.getElementById('load-more')?.focus({preventScroll:true});}else if(event.target.closest('#export-queue'))exportQueue();});
+  main.addEventListener('click',event=>{if(selectOverviewModule(event))return;if(event.target.closest('[data-rob-open-queue]')){state.model=defaultModel;state.module='all';state.capacity=10;state.selected=null;state.reveal=false;state.shown=25;return;}const caseButton=event.target.closest('[data-case]');if(caseButton){state.caseKind=caseButton.dataset.case;render();document.querySelector(`[data-case="${state.caseKind}"]`)?.focus({preventScroll:true});announce('Case selected. The historical outcome and all-model ranks are shown in the case detail.');return;}const modelButton=event.target.closest('[data-model]');if(modelButton){state.model=modelButton.dataset.model;render();document.querySelector(`[data-model="${state.model}"]`)?.focus();announce(`Inspecting ${model().label}.`);return;}const profileTab=event.target.closest('[data-profile-tab]');if(profileTab){activateProfileTab(profileTab.dataset.profileTab);return;}if(event.target.closest('#return-to-roster')){returnToRoster();return;}const studentTarget=event.target.closest('[data-student]');if(studentTarget){showStudentProfile(studentTarget);return;}if(event.target.closest('#load-more')){
+      const listOffset=document.getElementById('roster-scroll').scrollTop;
+      const scroll=window.scrollY;
+      state.shown+=25;
+      render();
+      document.getElementById('roster-scroll').scrollTop=listOffset;
+      window.scrollTo(0,scroll);
+      document.getElementById('load-more')?.focus({preventScroll:true});
+    }else if(event.target.closest('#export-queue'))exportQueue();});
   window.addEventListener('hashchange',setView);
   setView();
 })();

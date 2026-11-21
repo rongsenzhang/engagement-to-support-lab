@@ -119,7 +119,7 @@
     panel.innerHTML = `
       <header><h4 tabindex="-1">AI record analysis</h4><span>GPT-6.2 Sol</span></header>
       <p class="tutor-analysis-scope"></p>
-      <p class="tutor-analysis-disclosure">Generate an analysis to send this record’s anonymised day-28 evidence to OpenAI. Review its observations and suggested next check alongside the evidence below.</p>
+      <p class="tutor-analysis-disclosure">Generate an analysis to send this record’s anonymised day-28 evidence to OpenAI. Review its observations and suggested next check alongside the learning journey and resource records.</p>
       <p class="tutor-analysis-status" role="status"></p>
       <div class="tutor-analysis-results"></div>
       <button class="primary-button" type="button" data-analysis-action disabled>Generate AI analysis</button>
@@ -327,7 +327,7 @@
       } catch {
         if (lifetime.signal.aborted) return;
         if (localServer()) showSetup();
-        else notice.textContent = 'Record chat is currently unavailable. You can still review this record’s evidence below.';
+        else notice.textContent = 'Record chat is currently unavailable. The learning journey and resource records remain available.';
         reconnect.hidden = false;
         analysis.unavailable('The analysis service is currently unavailable. The day-28 evidence is available below.', true);
       } finally {
@@ -440,7 +440,7 @@
       current = makePanel(recordId, model, modelLabel, displayName);
     }
     slot.replaceChildren(current.analysis, current.panel);
-    // On a narrow screen the entire queue is above the record detail.
+    // Narrow layouts offer shortcuts from the student list into the AI panel.
     const heading = slot.closest?.('.workspace-grid')?.querySelector('.panel-head');
     if (heading && !heading.parentNode.querySelector('.tutor-ai-shortcuts')) {
       const shortcuts = document.createElement('div');

@@ -9,31 +9,40 @@
   <link rel="stylesheet" href="robustness.css">
   <link rel="stylesheet" href="study.css">
   <link rel="stylesheet" href="tutor-chat.css">
+  <link rel="stylesheet" href="workspace.css">
+  <link rel="stylesheet" href="overview.css">
+  <link rel="stylesheet" href="queue.css">
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
-  <header class="site-header">
-    <a class="brand" href="#overview" aria-label="Engagement-to-Support Lab home">
-      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 36 36"><path d="M6 26V10M15 26V17M24 26V6"/><circle cx="30" cy="10" r="3"/></svg></span>
-      <span><strong>Engagement-to-Support</strong><span class="brand-sub">RESEARCH LAB / V0.4</span></span>
-    </a>
-    <div class="header-status"><span class="status-dot"></span>Independent research · <a href="https://github.com/rongsenzhang/engagement-to-support-lab" target="_blank" rel="noopener noreferrer">Source &amp; history ↗</a></div>
+  <a class="skip-link" id="skip-to-workspace" href="#main">Skip to content</a>
+  <header class="workspace-header">
+    <div class="workspace-bar">
+      <a class="workspace-brand" href="#overview" aria-label="Engagement-to-Support Lab home">
+        <span class="workspace-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <strong>Engagement Lab</strong>
+      </a>
+      <button id="workspace-menu" class="workspace-menu" type="button" aria-expanded="false" aria-controls="workspace-nav">
+        <span class="menu-glyph" aria-hidden="true"></span><span>Menu</span>
+      </button>
+      <nav id="workspace-nav" class="workspace-nav" aria-label="Tutor workspace">
+        <a href="#overview" data-view="overview" aria-current="page">Dashboard</a>
+        <a href="#queue" data-view="queue">Students</a>
+        <a href="#trial" data-view="trial">Tutor practice</a>
+        <a href="#evidence" data-view="evidence">Model evidence</a>
+        <a href="#robustness" data-view="robustness">Course robustness</a>
+        <a href="#research" data-view="research">Sources</a>
+      </nav>
+      <span class="workspace-snapshot"><span class="snapshot-calendar" aria-hidden="true"></span><span class="snapshot-prefix">Snapshot ·</span> Day <b id="hero-cutoff">28</b></span>
+    </div>
   </header>
   <div class="page-shell">
-    <section class="hero" aria-label="About this prototype">
-      <div><p class="eyebrow">OULAD / DAY-28 RESEARCH SNAPSHOT</p><h1>Which records should a tutor review?</h1><p class="hero-description">Compare activity, assessment context and a transparent reference rule against later module withdrawal. Inspect the evidence and the limits of each score.</p></div>
-      <div class="snapshot-label"><span class="small-label">HISTORICAL SNAPSHOT</span><strong>Day <span id="hero-cutoff">28</span></strong><span>OULAD · 2013–2014</span><span class="snapshot-foot">Public, anonymised learning records</span></div>
-    </section>
-    <nav class="view-nav" aria-label="Lab views">
-      <a href="#overview" data-view="overview" class="active" aria-current="page"><span class="nav-number">01</span>Research question</a>
-      <a href="#queue" data-view="queue"><span class="nav-number">02</span>Review queue</a>
-      <a href="#evidence" data-view="evidence"><span class="nav-number">03</span>Model evidence</a>
-      <a href="#robustness" data-view="robustness"><span class="nav-number">04</span>Course robustness</a>
-      <a href="#trial" data-view="trial"><span class="nav-number">05</span>Tutor practice</a>
-      <a href="#research" data-view="research"><span class="nav-number">06</span>Sources &amp; scope</a>
-    </nav>
+    <h1 class="sr-only">Engagement-to-Support Lab tutor workspace</h1>
     <main id="main" tabindex="-1"><div class="loading-message" role="status">Loading the local research results…</div></main>
-    <footer class="site-footer"><span>Built by Rongsen Zhang · Engagement-to-Support Lab</span><span>Independent prototype · Not affiliated with Kortext</span><a id="dataset-link" href="https://archive.ics.uci.edu/dataset/349/open+university+learning+analytics+dataset" target="_blank" rel="noopener noreferrer">OULAD · CC BY 4.0 ↗</a></footer>
+    <footer class="workspace-footer">
+      <div><strong>Engagement-to-Support Lab</strong><span>Rongsen Zhang · v0.4</span></div>
+      <p>Independent research prototype. Unaffiliated with Kortext.</p>
+      <div class="footer-links"><a id="dataset-link" href="https://archive.ics.uci.edu/dataset/349/open+university+learning+analytics+dataset" target="_blank" rel="noopener noreferrer">OULAD · CC BY 4.0</a><a href="https://github.com/rongsenzhang/engagement-to-support-lab" target="_blank" rel="noopener noreferrer">Source &amp; history ↗</a></div>
+    </footer>
   </div>
   <div id="live-status" class="sr-only" role="status" aria-live="polite"></div>
   <script src="data.js"></script>
@@ -46,5 +55,6 @@
   <script src="study.js"></script>
   <script src="tutor-chat.js"></script>
   <script src="app.js"></script>
+  <script src="workspace-nav.js"></script>
 </body>
 </html>
