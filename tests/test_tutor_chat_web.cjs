@@ -19,7 +19,7 @@ class Element {
   querySelector(selector) {
     if (!this.parts.has(selector)) {
       const node = new Element();
-      node.hidden = selector === 'form' || selector === '[data-stop]';
+      node.hidden = ['form', '[data-stop]', '[data-analysis-cancel]'].includes(selector);
       this.parts.set(selector, node);
     }
     return this.parts.get(selector);
@@ -36,10 +36,13 @@ class Element {
 
 function harness(replies, url = 'http://localhost:8765', getResponse) {
   const calls = [];
-  const window = {location: new URL(url)};
+  const timers = new Map();
+  const window = {location: new URL(url), navigator: {onLine: true}};
   const context = {
     window, document: {createElement: () => new Element(), createTextNode: text => ({textContent: text})},
-    AbortController, TextDecoder, URL, setTimeout, clearTimeout,
+    AbortController, TextDecoder, URL,
+    setTimeout(action, delay) { const id = Symbol(); timers.set(id, {action, delay}); return id; },
+    clearTimeout(id) { timers.delete(id); },
     fetch: async (path, options) => {
       calls.push({path, ...options});
       if (options.method !== 'POST') return getResponse ? getResponse(path, options) : Response.json({available: true});
@@ -49,20 +52,31 @@ function harness(replies, url = 'http://localhost:8765', getResponse) {
   vm.runInNewContext(source, context);
   const slot = new Element();
   // Exercise the narrow-layout shortcut using the queue header recreated on render.
-  let jump;
+  let shortcuts;
   const heading = {
-    parentNode: {querySelector: () => jump},
-    insertAdjacentElement(position, button) { jump = button; }
+    parentNode: {querySelector: () => shortcuts},
+    insertAdjacentElement(position, node) { shortcuts = node; }
   };
   slot.closest = () => ({querySelector: () => heading});
   return {
-    get jump() { return jump; },
-    calls, api: window.LAB_TUTOR_CHAT,
-    async select(record = 'S-A', model = 'context') {
-      jump = null;
-      window.LAB_TUTOR_CHAT.mount(slot, record, model, model);
+    get jump() { return shortcuts.children[1]; },
+    get analysisJump() { return shortcuts.children[0]; },
+    get analysis() { return slot.children[0]; },
+    get posts() { return calls.filter(call => call.method === 'POST'); },
+    calls, api: window.LAB_TUTOR_CHAT, navigator: window.navigator,
+    async advance(delay = 500) {
+      for (const [id, timer] of [...timers]) {
+        if (timer.delay > delay) continue;
+        timers.delete(id);
+        timer.action();
+      }
       await tick();
-      return slot.children[0];
+    },
+    async select(record = 'S-A', model = 'context', displayName) {
+      shortcuts = null;
+      window.LAB_TUTOR_CHAT.mount(slot, record, model, model, displayName);
+      await tick();
+      return slot.children.at(-1);
     }
   };
 }
@@ -204,15 +218,218 @@ test('other GitHub projects on the same owner do not search for a backend', asyn
   assert.equal(h.calls.length, 0);
 });
 
-test('queue shortcut opens and focuses the current chat when the record changes', async () => {
+test('narrow-screen shortcuts focus the selected record analysis or open its conversation', async () => {
   const h = harness([], worker);
   const first = await h.select('S-A');
-  assert.match(h.jump.textContent, /S-A/);
+  assert.match(h.analysisJump.textContent, /S-A/);
   const second = await h.select('S-B');
-  assert.match(h.jump.textContent, /S-B/);
+  assert.match(h.analysisJump.textContent, /S-B/);
+  h.analysisJump.fire('click');
+  assert.equal(h.analysis.querySelector('h4').focused, true);
+  assert.equal(h.analysis.scrolled, true);
   h.jump.fire('click');
   assert.equal(second.open, true);
   assert.equal(second.querySelector('summary').focused, true);
   assert.equal(second.scrolled, true);
   assert.ok(!first.open);
+});
+
+const report = [
+  '### Observed evidence', '15 clicks in week 2; <em>one</em> submission.',
+  '**Model interpretation:** Lower recorded activity contributes to this score.',
+  '3. Missing context', 'Offline study is unknown.',
+  'Next check: Confirm the assessment deadline.'
+].join('\n');
+const complete = content => stream(Buffer.from(JSON.stringify({type: 'delta', text: content}) + '\n{"type":"done"}\n'));
+const reportStatus = panel => panel.querySelector('.tutor-analysis-status').textContent;
+const reportBlocks = panel => panel.querySelector('.tutor-analysis-results').children;
+const reportAction = panel => panel.querySelector('[data-analysis-action]');
+const pressReport = panel => reportAction(panel).fire('click');
+
+test('selecting records leaves the report idle until clicked, then Pages shows literal evidence under four headings', async () => {
+  const h = harness([() => complete(report)], pages, path =>
+    Response.json(path.endsWith('config.json') ? {origin: worker} : {available: true}));
+  await h.select('S-A');
+  const chat = await h.select('S-B', 'reference', 'Fictional Learner');
+  await h.advance(125000);
+  assert.equal(h.posts.length, 0);
+  assert.equal(reportAction(h.analysis).textContent, 'Generate AI analysis');
+  await pressReport(h.analysis);
+  assert.equal(h.posts.length, 1);
+  const [post] = h.posts;
+  assert.deepEqual(JSON.parse(post.body), {recordId: 'S-B', model: 'reference', mode: 'analysis'});
+  assert.equal(post.path, worker + '/api/tutor-chat');
+  assert.equal(post.mode, 'cors');
+  assert.equal(post.credentials, 'omit');
+  assert.equal(h.analysis.className, 'tutor-analysis');
+  assert.match(h.analysis.innerHTML, /AI record analysis/);
+  assert.match(h.analysis.innerHTML, /GPT-6.2 Sol/);
+  assert.equal(h.analysis.querySelector('.tutor-analysis-scope').textContent, 'Fictional Learner · reference');
+  assert.equal(chat.querySelector('.tutor-chat-scope').textContent, 'Fictional Learner · reference');
+  assert.match(h.analysisJump.textContent, /Fictional Learner/);
+  const blocks = reportBlocks(h.analysis);
+  assert.deepEqual(Array.from(blocks, block => block.children[0].textContent),
+    ['Observed evidence', 'Model interpretation', 'Missing context', 'Next check']);
+  assert.equal(blocks[0].children[1].textContent, '15 clicks in week 2; <em>one</em> submission.');
+  assert.equal(blocks[0].children[1].children.length, 0);
+  assert.equal(reportStatus(h.analysis), 'Analysis ready.');
+});
+
+test('completed reports survive rerenders and queue revisits, keyed by the record and ranking model', async () => {
+  const h = harness([() => complete('Observed evidence: First.'), () => complete('Observed evidence: Second.')]);
+  await h.select();
+  await pressReport(h.analysis);
+  const initial = h.analysis;
+  await h.select();
+  assert.equal(h.analysis, initial);
+  assert.equal(h.posts.length, 1);
+  await h.select('S-A', 'reference');
+  assert.equal(h.posts.length, 1);
+  assert.equal(reportAction(h.analysis).textContent, 'Generate AI analysis');
+  await pressReport(h.analysis);
+  assert.equal(h.posts.length, 2);
+  assert.match(reportBlocks(h.analysis)[0].textContent, /Second/);
+  h.api.close();
+  await h.select();
+  await h.advance();
+  assert.equal(reportBlocks(h.analysis).length, 0);
+  assert.equal(reportAction(h.analysis).textContent, 'View saved analysis');
+  await pressReport(h.analysis);
+  assert.equal(h.posts.length, 2);
+  assert.match(reportBlocks(h.analysis)[0].textContent, /First/);
+});
+
+test('report selection and queue disposal abort pending generation and discard late text', async () => {
+  let finish;
+  const h = harness([
+    () => new Promise(resolve => { finish = () => resolve(complete('Observed evidence: Stale.')); }),
+    () => new Promise((_, reject) => { finish = () => reject(new TypeError()); }),
+    () => complete('Observed evidence: Fresh.')
+  ]);
+  await h.select();
+  const first = h.analysis;
+  const pendingA = pressReport(h.analysis);
+  const aSignal = h.posts.at(-1).signal;
+  await h.select('S-B');
+  assert.equal(aSignal.aborted, true);
+  finish();
+  await pendingA;
+  assert.equal(h.posts.length, 1);
+  const pendingB = pressReport(h.analysis);
+  const bSignal = h.posts.at(-1).signal;
+  assert.equal(reportBlocks(first).length, 0);
+  assert.equal(reportBlocks(h.analysis).length, 0);
+  h.api.close();
+  assert.equal(bSignal.aborted, true);
+  finish();
+  await pendingB;
+  await h.select();
+  await pressReport(h.analysis);
+  assert.equal(h.posts.length, 3);
+  assert.match(reportBlocks(h.analysis)[0].textContent, /Fresh/);
+});
+
+test('Generate ignores repeated clicks; Cancel or a timeout permits an explicit retry', async () => {
+  const pending = options => new Promise((_, reject) => {
+    options.signal.addEventListener('abort', () => reject(new Error('Aborted')));
+  });
+  const h = harness([pending, pending, () => complete(report)]);
+  await h.select();
+  const cancel = h.analysis.querySelector('[data-analysis-cancel]');
+  const first = pressReport(h.analysis);
+  await pressReport(h.analysis);
+  assert.equal(h.posts.length, 1);
+  assert.equal(cancel.hidden, false);
+  cancel.fire('click');
+  await first;
+  assert.equal(reportStatus(h.analysis), 'Analysis cancelled.');
+  assert.equal(cancel.hidden, true);
+  assert.equal(reportAction(h.analysis).textContent, 'Retry analysis');
+  const second = pressReport(h.analysis);
+  await h.advance(125000);
+  await second;
+  assert.match(reportStatus(h.analysis), /timed out/);
+  assert.equal(h.posts.length, 2);
+  await pressReport(h.analysis);
+  assert.equal(reportStatus(h.analysis), 'Analysis ready.');
+  await pressReport(h.analysis);
+  assert.equal(h.posts.length, 3);
+});
+
+test('incomplete, empty and failed reports allow chat and retry only on request', async () => {
+  for (const fail of [
+    () => stream(Buffer.from('{"type":"delta","text":"Partial body."}\n')),
+    () => complete('Observed evidence:  '),
+    () => Response.json({error:'Daily analysis limit reached.'}, {status:429})
+  ]) {
+    const h = harness([fail, () => complete('Chat works.'), () => complete(report)]);
+    const panel = await h.select();
+    await pressReport(h.analysis);
+    assert.equal(reportBlocks(h.analysis).length, 0);
+    assert.equal(reportAction(h.analysis).textContent, 'Retry analysis');
+    await submit(panel, 'What do we know?');
+    assert.equal(JSON.parse(h.posts.at(-1).body).messages.length, 1);
+    await h.select('S-B');
+    await h.select();
+    await h.advance();
+    assert.equal(h.posts.length, 2);
+    await pressReport(h.analysis);
+    assert.equal(h.posts.length, 3);
+    assert.equal(reportBlocks(h.analysis).length, 4);
+  }
+});
+
+test('offline or unavailable services never generate a report, retry shares the connection with chat', async () => {
+  const h = harness([() => complete(report)]);
+  h.navigator.onLine = false;
+  const panel = await h.select();
+  await h.advance();
+  assert.equal(h.calls.length, 0);
+  assert.match(reportStatus(h.analysis), /offline/);
+  h.navigator.onLine = true;
+  await pressReport(h.analysis);
+  assert.equal(panel.querySelector('form').hidden, false);
+  await h.advance();
+  assert.equal(h.posts.length, 0);
+  assert.equal(reportAction(h.analysis).textContent, 'Generate AI analysis');
+  await pressReport(h.analysis);
+  assert.equal(h.posts.length, 1);
+  const unavailable = harness([], worker, () => Response.json({available: false}));
+  await unavailable.select();
+  await unavailable.advance();
+  assert.equal(unavailable.posts.length, 0);
+  assert.match(reportStatus(unavailable.analysis), /unavailable/);
+  const file = harness([], 'file:///tmp/demo.html');
+  await file.select();
+  await file.advance();
+  assert.equal(file.calls.length, 0);
+  assert.match(reportStatus(file.analysis), /hosted demo/);
+  assert.equal(reportAction(file.analysis).disabled, true);
+  await pressReport(file.analysis);
+  assert.equal(file.calls.length, 0);
+  const disconnected = harness([]);
+  await disconnected.select();
+  disconnected.navigator.onLine = false;
+  await pressReport(disconnected.analysis);
+  assert.equal(disconnected.posts.length, 0);
+  assert.match(reportStatus(disconnected.analysis), /offline/);
+});
+
+test('follow-up can refer to this completed analysis; it drops from history after later turns, or on record/model changes', async () => {
+  const h = harness([() => complete(report), ...Array.from({length: 7}, () => () => complete('Chat answer.'))]);
+  const panel = await h.select();
+  await pressReport(h.analysis);
+  for (let i = 0; i < 5; i++) {
+    await submit(panel, 'Explain point ' + i);
+    const {messages} = JSON.parse(h.posts.at(-1).body);
+    assert.equal(messages.filter(message => message.content === report).length, i < 3 ? 1 : 0);
+    assert.equal(messages.at(-1).role, 'user');
+    assert.ok(messages.length <= 9);
+  }
+  const different = await h.select('S-A', 'reference');
+  await submit(different, 'What changed?');
+  assert.equal(JSON.parse(h.posts.at(-1).body).messages.length, 1);
+  const another = await h.select('S-B');
+  await submit(another, 'What evidence?');
+  assert.equal(JSON.parse(h.posts.at(-1).body).messages.length, 1);
 });

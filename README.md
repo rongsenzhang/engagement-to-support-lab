@@ -21,7 +21,7 @@ Kortext product, a Stream integration or a reproduction of its proprietary model
 | View | Purpose |
 |---|---|
 | Research question | Compare the historical activity model, contextual model and transparent reference rule at the same review workload; inspect successes and failures. |
-| Review queue | Inspect a record, compare models and export the review list. Ask follow-up questions about the selected record’s day-28 evidence in the online tutor chat. |
+| Review queue | Inspect a record, compare models and export the review list. Select **Generate AI analysis** for an English tutor report on the selected record. Explore activity and assessment detail, then ask follow-up questions. |
 | Model evidence | Compare ranking, probability error, calibration and capacity trade-offs, with evaluation boundaries and aggregate error checks. |
 | Course robustness | Inspect within-course results, held-out courses, a course-prior baseline, a controlled nonlinear comparator and simulated late/missing records. |
 | Tutor practice | Work through four tasks using 50 fictional cases; save initial and revised judgements, select five records, pause tasks and export/restore a session. |
@@ -58,8 +58,11 @@ v0.4. Publishing the website does not automatically create a release tag or ZIP.
 
 ### Ask about a review-queue record
 
-On a phone or computer, open the [hosted review queue](https://engagement-to-support-chat.rongsenzhang-common-hours-8c01a2fc7d8b.workers.dev/#queue), choose a record, and expand
-**Discuss this record with AI**. Try “Which observations support checking the
+On a phone or computer, open the [hosted review queue](https://engagement-to-support-chat.rongsenzhang-common-hours-8c01a2fc7d8b.workers.dev/#queue), choose a learner and select **Generate AI analysis**. The GPT-6.2 Sol report explains observed activity, the selected scoring method, missing context and a next check. Opening a record or switching learners does not generate a report. A completed report can be reused for the same evidence and scoring method.
+
+Learner names are fictional. Real Open University course titles are assigned as examples to the anonymised module codes. The public enrolment alias and module code remain available for tracing the original evidence. Clicks by activity type, distinct resources accessed, peak activity day and dated assessment records are drawn from OULAD. The historical prediction and its fitted inputs are preserved.
+
+For a conversation, expand **Discuss this record with AI**. Try “Which observations support checking the
 submission record, and what would a late data feed change?” Replies appear as
 they are generated. You can follow up or stop a reply. Selecting another
 record or model starts a fresh conversation.
@@ -75,8 +78,7 @@ For a private local session, run `python3 run_demo.py --chat` or double-click
 `start_tutor_chat.command` on macOS. Enter your own key at the hidden terminal
 prompt. The local server keeps it in memory until you press Ctrl+C. The offline
 HTML continues to work for reviewing records. Chat needs internet access.
-The default model is `gpt-4.1-mini`. Use `OPENAI_MODEL` to select another
-streaming Responses API text model available to the project.
+Reports use `gpt-6.2-sol`. Follow-up chat uses the host’s `OPENAI_MODEL` setting (local fallback `gpt-4.1-mini`).
 
 ## What the completed analysis found
 

@@ -40,7 +40,12 @@ The secret stays on the server. Visitors share the owner's OpenAI project
 usage. The Worker reserves up to 100 requests per UTC day, and 10 requests per
 public IP per UTC hour, before contacting OpenAI. A shared network uses a
 single hourly allowance. Failed or cancelled calls can use a reservation.
-Each request limits the conversation size and asks for at most 700 output tokens.
+The optional Generate AI analysis button requests a fixed English GPT-6.2 Sol
+report with up to 1,800 output tokens. The Worker caches completed reports for
+24 hours by record, scoring method, evidence and report instructions. A cache
+hit can be served without an additional model call or quota reservation.
+Follow-up chat uses `OPENAI_MODEL`, a limited conversation history and up to
+700 output tokens. Both share the public quota.
 The counters persist across server restarts and deployments.
 The app keeps chat history in the open page. It sends the selected evidence
 and recent messages to OpenAI with Responses API storage disabled.

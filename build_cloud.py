@@ -15,7 +15,7 @@ OUT = ROOT / "dist" / "cloud-assets"
 STATIC_FILES = (
     "index.html", "styles.css", "robustness.css", "study.css", "tutor-chat.css",
     "data.js", "reference-data.js", "robustness-data.js", "robustness.js",
-    "study-data.js", "study.js", "tutor-chat.js", "app.js",
+    "record-context-data.js", "demo-identities.js", "study-data.js", "study.js", "tutor-chat.js", "app.js",
 )
 QUEUE_MODELS = ("inactivity", "activity", "trend", "context", "reference")
 # Workers Free static asset limits, shared by the demo and the private evidence route.

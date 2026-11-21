@@ -70,3 +70,21 @@ schema is validated in both the browser and `src/study_summary.py`. Session file
 are private working records, not public research artifacts. Practice and
 unfinished sessions cannot become participant counts in the summary. Actual
 attendance and agreement must still be confirmed outside software.
+
+
+## Review-queue context at day 28
+
+`web/record-context-data.js` adds a separate record per published enrolment alias.
+Rebuild it with `python build_record_context.py --raw-dir data/raw` in the
+scientific Python environment. Normal app use and cloud deployment read the
+committed overlay. Counts cover positive VLE clicks on course days 1–28.
+Distinct resources count site IDs within a module presentation. The peak date
+is the earliest tied day with the most clicks. Forum clicks include access to
+the forum; the data do not identify what the learner read or wrote.
+
+Assessment detail follows the original TMA/CMA expectation rule. Only deadlines
+and recorded submissions visible by day 28 are shown. Banked credit is labelled
+separately. The rebuild reconciles every row with its frozen click total, number
+due and number without a recorded submission. The new descriptions contextualise
+the historical predictions. They are not extra fitted coefficients.
+The student names and catalogue course titles on screen are demonstration labels.

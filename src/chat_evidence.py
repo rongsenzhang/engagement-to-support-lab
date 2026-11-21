@@ -12,6 +12,47 @@ SIGNALS = (
 )
 
 
+CONTEXT_JS_PREFIX = "window.LAB_RECORD_CONTEXT = "
+RESOURCE_LABELS = {
+    "forumng": "Forums",
+    "oucontent": "Course content", "resource": "Course content", "page": "Course content",
+    "glossary": "Course content", "url": "Linked resources",
+    "homepage": "Course navigation", "subpage": "Course navigation",
+    "folder": "Course navigation", "sharedsubpage": "Course navigation",
+    "quiz": "Quizzes", "externalquiz": "Quizzes",
+    "oucollaborate": "Collaboration tools", "ouelluminate": "Collaboration tools",
+    "ouwiki": "Collaboration tools",
+}
+
+ACTIVITY_GROUPS = frozenset(RESOURCE_LABELS.values()) | {"Other activities"}
+
+
+@lru_cache(maxsize=1)
+def _record_context():
+    path = ARTIFACTS.parent / "web" / "record-context-data.js"
+    try:
+        source = path.read_text(encoding="utf-8").strip()
+    except FileNotFoundError:
+        return {}
+    if not source.startswith(CONTEXT_JS_PREFIX) or not source.endswith(";"):
+        raise ValueError("Unexpected record context format")
+    return json.loads(source[len(CONTEXT_JS_PREFIX):-1])
+
+
+def selected_context(record_id):
+    row = _record_context().get(record_id)
+    if row is None:
+        return None
+    return {
+        "resources_opened": row["resources_opened"],
+        "clicks_by_activity": {key: value for key, value in row["clicks_by_activity"].items()
+                               if key in ACTIVITY_GROUPS},
+        "peak_day": row["peak_day"], "peak_day_clicks": row["peak_day_clicks"],
+        "assessments": [{key: item[key] for key in ("kind", "due_day", "status", "submitted_day")
+                         if key in item} for item in row["assessments"]],
+    }
+
+
 @lru_cache(maxsize=1)
 def _tables():
     # Load the same published values as the queue, including the R overlay.
@@ -55,10 +96,14 @@ def get_evidence(record_id, model_id):
             contributions=[{k: term[k] for k in ("label", "contribution")}
                            for term in row["contributions"][model_id]],
         )
-    return {
+    evidence = {
         "source": "Historical public OULAD module enrolment",
         "module": row["module"], "presentation": row["presentation"], "cutoff_day": 28,
         "weekly_recorded_clicks": row["weeks"],
         "observed_signals": {k: signals[k] for k in SIGNALS},
         "selected_estimate": estimate,
     }
+    context = selected_context(record_id)
+    if context is not None:
+        evidence["engagement_context"] = context
+    return evidence

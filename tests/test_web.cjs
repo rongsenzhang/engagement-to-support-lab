@@ -15,7 +15,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const root = path.resolve(__dirname, '..');
-const source = Object.fromEntries(['data.js', 'reference-data.js', 'app.js'].map(
+const source = Object.fromEntries(['data.js', 'reference-data.js', 'record-context-data.js', 'demo-identities.js', 'app.js'].map(
   file => [file, fs.readFileSync(path.join(root, 'web', file), 'utf8')]
 ));
 
@@ -71,11 +71,13 @@ function app(options = {}) {
     // Timers only clean up exported object URLs; no real event loop is needed.
     setTimeout(callback) { callback(); },
   });
+  vm.runInContext(source['record-context-data.js'], context, {filename: 'record-context-data.js'});
   if (!options.omitBase) vm.runInContext(source['data.js'], context, { filename: 'data.js' });
   if (!options.omitReference) {
     vm.runInContext(source['reference-data.js'], context, { filename: 'reference-data.js' });
     if (options.referenceEdit) options.referenceEdit(window.LAB_REFERENCE);
   }
+  vm.runInContext(source['demo-identities.js'], context, { filename: 'demo-identities.js' });
   if (options.studyUI) window.LAB_STUDY_UI = options.studyUI;
   if (options.chatUI) window.LAB_TUTOR_CHAT = options.chatUI;
   vm.runInContext(source['app.js'], context, { filename: 'app.js' });
@@ -218,6 +220,35 @@ test('each deterministic case opens, including failures outside both review queu
   }
 });
 
+test('fictional names and example courses stay tied to public record and module keys', () => {
+  const a = app({ hash: '#queue' });
+  const { namesForAliases, courses } = a.window.LAB_DEMO_IDENTITIES;
+  const aliases = Array.from(a.window.LAB_DATA.students, s => s.id);
+  const names = namesForAliases(aliases);
+  assert.equal(new Set(names.values()).size, aliases.length);
+  assert.deepEqual([...namesForAliases(aliases.reverse())], [...names]);
+  assert.match(a.html, /Student names are fictional/);
+  assert.match(a.html, /OULAD withholds the original names and course titles/);
+  for (const [code, course] of Object.entries(courses)) {
+    assert.ok(a.html.includes(`${code} · ${course.title}</option>`));
+  }
+  const firstId = a.html.match(/<tr data-student="([^"]+)"/)[1];
+  const record = a.window.LAB_DATA.students.find(s => s.id === firstId);
+  const assertName = () => {
+    assert.ok(a.html.includes(`>${names.get(firstId)}</button>`));
+    assert.ok(a.html.includes(`<h3 class="detail-id">${names.get(firstId)}</h3>`));
+    assert.ok(a.html.includes(`Record ${firstId} · ${record.presentation}`));
+    assert.ok(a.html.includes(courses[record.module].url));
+  };
+  assertName();
+  a.change('module-select', record.module);
+  assertName();
+  a.change('model-select', 'reference');
+  a.change('model-select', 'context');
+  a.click('student', firstId);
+  assertName();
+});
+
 test('module and committed capacity changes export the matching deterministically ranked cohort', async () => {
   const a = app({ hash: '#queue' });
   a.change('model-select', 'reference');
@@ -319,13 +350,14 @@ test('trial routing pauses the active session before leaving and restores the mo
   assert.match(app({hash:'#trial'}).html, /Tutor practice is unavailable/);
 });
 
-test('queue mounts tutor chat with only the active alias and model and closes it on navigation', () => {
+test('queue AI tools receive the selected identity and model and close on navigation', () => {
   const events = [];
   const chatUI = {mount(slot, ...context) { events.push(context); }, close() { events.push('closed'); }};
   const a = app({hash:'#queue', chatUI});
   const [alias, model] = events.at(-1);
   assert.match(alias, /^S-/);
   assert.equal(model,'context');
+  assert.match(events.at(-1)[3], /^[A-Za-z]+ [A-Za-z]+$/);
   const first = events.at(-1);
   a.change('reveal-outcomes', undefined, true);
   assert.deepEqual(events.at(-1),first);
@@ -333,4 +365,15 @@ test('queue mounts tutor chat with only the active alias and model and closes it
   assert.equal(events.at(-1)[1],'reference');
   a.route('trial');
   assert.equal(events.at(-1),'closed');
+});
+
+
+test('queue contextual details match the selected day-28 record and fitted factors', () => {
+  const ui = app({hash:'#queue'});
+  assert.match(ui.html, /32 distinct course resources accessed/);
+  assert.match(ui.html, /Day 28 accounted for 177 of 461 clicks/);
+  assert.match(ui.html, /Tutor-marked assessment due on day 24 · no submission recorded by day 28/);
+  assert.match(ui.html, /Show [1-9] more model factors/);
+  ui.change('module-select', 'EEE');
+  assert.match(ui.html, /No tutor- or computer-marked assessment was due by day 28/);
 });
